@@ -2,7 +2,7 @@
 
 ## Richiede configurazione o verifica manuale
 - **Progetto Supabase**: creazione, applicazione migrazioni (`supabase db push`), URL e publishable key in `.env.local`.
-- **Auth**: Site URL e Redirect URLs; template email `supabase/templates/*.html`; SMTP personalizzato per l'uso reale (il servizio email integrato di Supabase ha limiti di invio bassi).
+- **Auth**: Site URL (`http://localhost:3000`) e Redirect URLs (`localhost`/`127.0.0.1:3000/**`) già configurati sul progetto `sentinel-intelligence`. I template email personalizzati `supabase/templates/*.html` richiedono un **SMTP personalizzato** (Supabase non permette di modificarli con il servizio email integrato): finché non è configurato si usano i template predefiniti, gestiti da `/auth/confirm` tramite `code` — il link di conferma/recupero va aperto nello stesso browser in cui è stata fatta la richiesta. Il servizio email integrato invia solo agli indirizzi dei membri dell'organizzazione Supabase e con limiti bassi.
 - **Primo amministratore di piattaforma**: query SQL nel README (serve solo per `training-datasets`).
 - **Test end-to-end** nel browser: non eseguiti in questa sessione (vedi docs/TESTING.md §5).
 

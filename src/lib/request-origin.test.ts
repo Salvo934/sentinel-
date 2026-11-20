@@ -9,11 +9,11 @@ describe("publicOrigin", () => {
     expect(
       publicOrigin(
         req("http://localhost/auth/confirm", {
-          host: "nis2.example.workers.dev",
+          host: "sentinel.example.workers.dev",
           "x-forwarded-proto": "https",
         }),
       ),
-    ).toBe("https://nis2.example.workers.dev");
+    ).toBe("https://sentinel.example.workers.dev");
   });
   it("keeps the port of local hosts", () => {
     expect(publicOrigin(req("http://localhost:8788/x", { host: "127.0.0.1:8788" }))).toBe(

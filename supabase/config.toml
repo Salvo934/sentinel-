@@ -255,11 +255,11 @@ otp_expiry = 3600
 # Email templates use the server-side token_hash flow (/auth/confirm),
 # so verification works even if the link is opened in another browser.
 [auth.email.template.confirmation]
-subject = "Conferma il tuo account NIS2 Control"
+subject = "Conferma il tuo account Sentinel Intelligence"
 content_path = "./supabase/templates/confirmation.html"
 
 [auth.email.template.recovery]
-subject = "Reimposta la password di NIS2 Control"
+subject = "Reimposta la password di Sentinel Intelligence"
 content_path = "./supabase/templates/recovery.html"
 
 # Uncomment to customize notification email template
