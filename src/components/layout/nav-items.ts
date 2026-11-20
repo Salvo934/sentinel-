@@ -1,5 +1,6 @@
 import {
   Bot,
+  Compass,
   Crosshair,
   FileText,
   FolderKanban,
@@ -56,6 +57,7 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     label: "Formazione",
     items: [
+      { href: "/missions", label: "Missioni e casi reali", icon: Compass },
       { href: "/training", label: "Training Academy", icon: GraduationCap },
       { href: "/assistant", label: "AI Assistant", icon: Bot, planned: "Fase 5" },
     ],

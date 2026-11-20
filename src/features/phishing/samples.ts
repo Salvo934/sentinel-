@@ -139,4 +139,117 @@ Gentile partner, a seguito di un cambio di istituto bancario vi chiediamo di agg
 per tutti i pagamenti futuri. Il nuovo IBAN è riportato nel modulo: https://velora-cornponenti.example/modulo-iban
 Cordiali saluti, Ufficio Acquisti`,
   },
+
+  // ---------------------------------------------------------------------------
+  // Ricostruzioni didattiche dei "Casi reali": lo schema riproduce campagne
+  // documentate da CERT-AGID/INPS/ACN, ma domini, IP e persone sono fittizi.
+  // ---------------------------------------------------------------------------
+  {
+    key: "real-pagopa-multa",
+    label: "Caso reale — Falso avviso PagoPA (multa)",
+    scenario: "Ricostruzione didattica delle campagne a tema PagoPA/sanzioni stradali documentate dal CERT-AGID nel 2025. Domini fittizi.",
+    raw: `Received: from mail.pagopa-sanzioni-servizi.example (unknown [203.0.113.140])
+\tby mx.organizzazione.example with ESMTP; Mon, 16 Nov 2026 10:02:11 +0100
+${auth("fail", "none", "fail", "avvisi@pagopa-sanzioni-servizi.example", "pagopa-sanzioni-servizi.example", "pagopa-avvisi.example")}
+From: "PagoPA - Avvisi di Pagamento" <notifiche@pagopa-avvisi.example>
+Reply-To: assistenza@pagopa-sanzioni-servizi.example
+Return-Path: <avvisi@pagopa-sanzioni-servizi.example>
+To: dipendente@organizzazione.example
+Subject: Sollecito di pagamento relativo a sanzione stradale - ultimo avviso
+Date: Mon, 16 Nov 2026 10:02:05 +0100
+Message-ID: <sanz-88213@pagopa-sanzioni-servizi.example>
+Content-Type: text/html; charset=utf-8
+
+<p>Gentile contribuente, risulta non pagata la sanzione stradale n. 2026/88213 per un importo di 37,80 EUR.</p>
+<p>Il pagamento deve essere effettuato entro 48 ore, altrimenti l'importo verrà maggiorato e trasmesso alla riscossione.</p>
+<a href="https://pagopa-sanzioni-servizi.example/avviso?id=88213">Paga ora su pagopa.gov.it</a>`,
+  },
+  {
+    key: "real-inps-sms",
+    label: "Caso reale — Smishing INPS (documenti e selfie)",
+    scenario: "Ricostruzione didattica dello smishing a tema INPS segnalato da CERT-AGID e INPS (2025-2026). SMS trascritto; dominio fittizio.",
+    raw: `From: INPS (SMS)
+To: +39 3XX XXX XXXX
+Subject: [SMS trascritto]
+Date: Tue, 11 Aug 2026 09:14:00 +0200
+
+INPS: gentile utente, per evitare la sospensione del pagamento in corso e necessario aggiornare i tuoi dati entro 24 ore. Accedi qui: https://inps-aggiornamento-dati.example/verifica e carica documento e selfie.`,
+  },
+  {
+    key: "real-malspam-ordine",
+    label: "Caso reale — Malspam 'nuovo ordine' (infostealer)",
+    scenario: "Ricostruzione didattica del malspam B2B a tema ordini/preventivi che distribuisce FormBook, Remcos o AgentTesla (CERT-AGID 2024-2025). Domini fittizi.",
+    raw: `Received: from vps-77.hosting-rapido.example (unknown [198.51.100.61])
+\tby mx.organizzazione.example with ESMTP; Wed, 18 Nov 2026 08:31:40 +0100
+${auth("softfail", "none", "none", "sales@meccanica-forniture-srl.example", "meccanica-forniture-srl.example", "meccanica-forniture-srl.example")}
+From: "Ufficio Vendite" <sales@meccanica-forniture-srl.example>
+To: acquisti@organizzazione.example
+Subject: Nuovo ordine PO-2026-0453 - conferma urgente
+Date: Wed, 18 Nov 2026 08:31:35 +0100
+Message-ID: <po0453@meccanica-forniture-srl.example>
+Content-Type: multipart/mixed; boundary="b2"
+
+--b2
+Content-Type: text/plain; charset=utf-8
+
+Buongiorno, in allegato il nuovo ordine PO-2026-0453 con quantita e prezzi.
+Vi preghiamo di confermare urgentemente la disponibilita entro oggi.
+Cordiali saluti, Ufficio Vendite
+--b2
+Content-Type: application/x-rar-compressed; name="PO-2026-0453.pdf.rar"
+Content-Disposition: attachment; filename="PO-2026-0453.pdf.rar"
+
+[contenuto rimosso — campione sanitizzato]
+--b2--`,
+  },
+  {
+    key: "real-pec-sollecito",
+    label: "Caso reale — PEC compromessa con falso sollecito",
+    scenario: "Ricostruzione didattica delle campagne via caselle PEC compromesse (Vidar, MintsLoader) documentate dal CERT-AGID. L'autenticazione passa perché la casella è reale ma compromessa. Domini fittizi.",
+    raw: `Received: from smtps.pec-provider.example (smtps.pec-provider.example [192.0.2.25])
+\tby mx.pec-organizzazione.example with ESMTPS; Thu, 19 Nov 2026 15:44:02 +0100
+${auth("pass", "pass", "pass", "studio.verdi@pec-provider.example", "pec-provider.example", "pec-provider.example")}
+From: "Per conto di: studio.verdi@pec-provider.example" <posta-certificata@pec-provider.example>
+Reply-To: studio.verdi@pec-provider.example
+To: amministrazione@pec-organizzazione.example
+Subject: POSTA CERTIFICATA: Sollecito di pagamento fattura n. 1207
+Date: Thu, 19 Nov 2026 15:44:00 +0100
+Message-ID: <opec-1207@pec-provider.example>
+Content-Type: text/plain; charset=utf-8
+
+Gentile cliente,
+con la presente si sollecita il pagamento della fattura in oggetto, scaduta. Per visualizzare la fattura e le coordinate di pagamento scaricare il documento al seguente link entro 24 ore:
+https://documenti-condivisi-cloud.example/d/fattura_1207.zip
+Distinti saluti`,
+  },
+  {
+    key: "real-clickfix-corriere",
+    label: "Caso reale — ClickFix con esca 'corriere'",
+    scenario: "Ricostruzione didattica delle campagne ClickFix a tema spedizioni (es. falso supporto di un corriere) segnalate dal CERT-AGID. La pagina chiede di premere Win+R e incollare un comando. Domini fittizi.",
+    raw: `Received: from mailer.spedizioni-assistenza.example (unknown [203.0.113.188])
+\tby mx.organizzazione.example with ESMTP; Fri, 20 Nov 2026 11:05:20 +0100
+${auth("none", "none", "fail", "support@spedizioni-assistenza.example", "spedizioni-assistenza.example", "corriere-espresso.example")}
+From: "Supporto Corriere Espresso" <support@corriere-espresso.example>
+Reply-To: support@spedizioni-assistenza.example
+To: magazzino@organizzazione.example
+Subject: La tua spedizione e bloccata - verifica richiesta
+Date: Fri, 20 Nov 2026 11:05:15 +0100
+Message-ID: <trk-55120@spedizioni-assistenza.example>
+Content-Type: text/html; charset=utf-8
+
+<p>La spedizione n. 5512077 non puo essere consegnata. Verifica l'indirizzo entro oggi per evitare la restituzione.</p>
+<a href="https://verifica-spedizione-captcha.example/track?n=5512077">Traccia la spedizione su corriere-espresso.example</a>
+<p>Per motivi di sicurezza ti verra chiesto di confermare di non essere un robot.</p>`,
+  },
+  {
+    key: "real-mirax-sms",
+    label: "Caso reale — Falso rimborso Agenzia Entrate e app IO",
+    scenario: "Ricostruzione didattica della campagna Mirax (novembre 2026, riportata dalla stampa): falso sito dell'Agenzia delle Entrate e finto aggiornamento dell'app IO per Android. Il canale (SMS) è un'ipotesi didattica. Domini fittizi.",
+    raw: `From: AgEntrate (SMS)
+To: +39 3XX XXX XXXX
+Subject: [SMS trascritto]
+Date: Tue, 17 Nov 2026 18:22:00 +0100
+
+Agenzia Entrate: ti spetta un rimborso fiscale di 248,60 EUR. Per riceverlo aggiorna subito l'app IO dal portale: https://agenziaentrate-rimborsi.example/io-aggiornamento`,
+  },
 ];

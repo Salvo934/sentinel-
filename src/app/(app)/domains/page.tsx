@@ -16,8 +16,10 @@ import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Domain Analysis" };
 
-export default async function DomainsPage() {
+export default async function DomainsPage({ searchParams }: PageProps<"/domains">) {
   const { active, user } = await requireActiveOrg();
+  const d = (await searchParams).d;
+  const initialDomain = ((Array.isArray(d) ? d[0] : d) ?? "").slice(0, 253);
   const supabase = await createClient();
   const [cases, members, { data: saved }, { data: queries }] = await Promise.all([
     getCaseOptions(active.organizationId),
@@ -29,7 +31,7 @@ export default async function DomainsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Domain & URL Investigation" description="Analisi di domini: DNS (A, AAAA, MX, NS, TXT, DMARC), RDAP, osservazioni automatiche, valutazione motivata e collegamento ai casi." />
-      <DomainWorkbench cases={cases} />
+      <DomainWorkbench cases={cases} initialDomain={initialDomain} />
       <div className="grid gap-4 xl:grid-cols-2">
         <Card>
           <CardHeader>

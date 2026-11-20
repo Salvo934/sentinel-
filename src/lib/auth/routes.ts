@@ -21,6 +21,7 @@ const PROTECTED_PREFIXES = [
   "/evidence",
   "/reports",
   "/training",
+  "/missions",
   "/assistant",
   "/settings",
   "/update-password",

@@ -13,6 +13,7 @@ const ENTITY: Record<string, string> = {
   organization_member: "Membro",
   training: "Esercitazione",
   attack_mapping: "Tecnica ATT&CK",
+  mission: "Missione",
 };
 const VERB: Record<string, string> = {
   created: "creato",
@@ -35,6 +36,7 @@ export function describeAction(action: string): string {
     downloaded: "scaricato",
     integrity_checked: "verifica integrità",
     submitted: "consegnato",
+    completed: "completata",
   };
   const e = ENTITY[entity ?? ""] ?? entity ?? "";
   const v = (client ? clientVerbs[verb ?? ""] : VERB[verb ?? ""]) ?? verb ?? "";

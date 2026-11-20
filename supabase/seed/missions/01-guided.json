@@ -1,0 +1,503 @@
+[
+  {
+    "slug": "primo-giorno-falsa-fattura",
+    "kind": "guided",
+    "sort_order": 1,
+    "title": "Il primo giorno: l'email della falsa fattura",
+    "summary": "Laura dell'amministrazione ti inoltra un sollecito di pagamento sospetto. Lavori il caso dall'inizio alla fine come farebbe un analista SOC/CTI: prova, analisi, verifica del dominio, indicatori, ATT&CK, report.",
+    "difficulty": "beginner",
+    "category": "phishing_investigation",
+    "roles": ["CTI Analyst", "Cybersecurity Analyst", "OSINT Analyst"],
+    "estimated_minutes": 50,
+    "content": {
+      "request": {
+        "from": "Laura Bianchi, Ufficio Amministrazione (personaggio fittizio)",
+        "channel": "Email inoltrata alla casella sicurezza@",
+        "text": "Ciao, mi è arrivata questa mail del fornitore Aurora Logistica che dice che una fattura è scaduta e va pagata entro 24 ore. Non mi torna, prima pagavamo con bonifico normale. È vera? Devo pagare?"
+      },
+      "context": "È la richiesta più frequente che riceve un analista junior. La domanda esplicita è 'è vera?', ma quella reale è più ampia: è pericolosa, qualcuno ha già cliccato o pagato, ci sono altre email uguali, cosa dobbiamo bloccare. Lavorerai con il campione 'Falsa fattura' del Phishing Lab (dati fittizi, domini .example).",
+      "materials": [
+        { "type": "sample", "sample_key": "fake-invoice", "label": "Apri il messaggio nel Phishing Lab (campione 'Falsa fattura')" }
+      ],
+      "steps": [
+        {
+          "id": "s1",
+          "title": "Apri il caso e scrivi la domanda giusta",
+          "instruction": "Crea un caso di tipo Phishing Investigation e collegalo a questa missione. Nel campo 'Obiettivo investigativo' scrivi la domanda a cui il caso deve rispondere (non 'analizzare l'email', ma cosa deve sapere chi decide).",
+          "module": { "href": "/investigations/new?category=phishing_investigation&title=Sollecito%20fattura%20sospetto%20-%20Aurora%20Logistica", "label": "Nuovo caso" },
+          "think": ["Chi deve prendere una decisione e quale?", "Cosa succede se rispondo solo 'è falsa'?", "Quali domande nascoste ci sono (altri destinatari, clic, pagamenti)?"],
+          "check": { "type": "objective", "min": 40 },
+          "quiz": {
+            "type": "single",
+            "prompt": "Quale obiettivo investigativo è formulato meglio?",
+            "options": [
+              { "value": "a", "label": "Analizzare l'email ricevuta da Laura." },
+              { "value": "b", "label": "Stabilire se l'email è malevola, se ha prodotto effetti (clic, pagamenti, altri destinatari) e quali azioni di blocco e comunicazione servono." },
+              { "value": "c", "label": "Dimostrare che Aurora Logistica è un fornitore fraudolento." }
+            ]
+          }
+        },
+        {
+          "id": "s2",
+          "title": "Conserva la prova prima di analizzarla",
+          "instruction": "Registra l'email come evidenza del caso. Puoi copiare il testo del campione in un file .txt o .eml e caricarlo: la piattaforma ne calcolerà l'hash SHA-256.",
+          "module": { "href": "/evidence/new?case={case}", "label": "Nuova evidenza" },
+          "think": ["Se tra un mese qualcuno chiede cosa ho analizzato, posso dimostrarlo?", "Ho annotato fonte, data e metodo di acquisizione?"],
+          "check": { "type": "evidence", "with_file": true },
+          "quiz": {
+            "type": "single",
+            "prompt": "Perché si calcola l'hash dell'evidenza al momento dell'acquisizione?",
+            "options": [
+              { "value": "a", "label": "Per cifrare il file e proteggerlo." },
+              { "value": "b", "label": "Per poter verificare in seguito che il file non sia stato modificato." },
+              { "value": "c", "label": "Per scoprire se il file contiene malware." }
+            ]
+          }
+        },
+        {
+          "id": "s3",
+          "title": "Analizza il messaggio senza esporti a rischi",
+          "instruction": "Nel Phishing Lab carica il campione 'Falsa fattura', premi Analizza, leggi header e risultati di autenticazione. Salva l'analisi collegandola al caso, con un verdetto e una valutazione motivata.",
+          "module": { "href": "/phishing?sample=fake-invoice", "label": "Phishing Lab" },
+          "think": ["Cosa dice il mittente di essere e cosa dimostrano gli header?", "Dove andrebbero le risposte (Reply-To)?", "Perché non apro né link né allegato?"],
+          "check": { "type": "phishing", "with_verdict": true },
+          "quiz": {
+            "type": "multi",
+            "prompt": "Quali elementi sono evidenze tecniche (non opinioni) di frode in questo messaggio?",
+            "options": [
+              { "value": "spf", "label": "SPF fail per il dominio che ha inviato il messaggio" },
+              { "value": "dmarc", "label": "DMARC fail per il dominio dichiarato nel From" },
+              { "value": "reply", "label": "Reply-To su un dominio diverso dal mittente" },
+              { "value": "tone", "label": "Il tono dell'email è scortese" },
+              { "value": "attach", "label": "Allegato .pdf.zip con doppia estensione" }
+            ]
+          }
+        },
+        {
+          "id": "s4",
+          "title": "Verifica il dominio usato dagli attaccanti",
+          "instruction": "Analizza fatture-online-verifica.example in Domain Analysis (dati simulati perché è un dominio riservato), assegna un livello di rischio con la motivazione e salva l'analisi collegandola al caso.",
+          "module": { "href": "/domains?d=fatture-online-verifica.example", "label": "Domain Analysis" },
+          "think": ["Da quanto esiste il dominio?", "È configurato per inviare posta in modo affidabile (SPF/DMARC)?", "Quale motivazione scriverei se il mio responsabile mi chiedesse 'perché rischio alto?'"],
+          "check": { "type": "domain" },
+          "quiz": {
+            "type": "single",
+            "prompt": "Il dominio risulta registrato da pochi giorni. Come lo etichetti?",
+            "options": [
+              { "value": "fact", "label": "Fatto verificato (dato RDAP), che aumenta il sospetto ma da solo non prova la frode" },
+              { "value": "proof", "label": "Prova definitiva che il dominio è malevolo" },
+              { "value": "irrelevant", "label": "Irrilevante: molti domini sono nuovi" }
+            ]
+          }
+        },
+        {
+          "id": "s5",
+          "title": "Estrai gli indicatori da bloccare",
+          "instruction": "Registra nel registro IOC almeno 2 indicatori collegati al caso (es. il dominio dei link e l'URL della pagina), con verdetto, confidenza e TLP. Dal Phishing Lab puoi farlo automaticamente spuntando 'Registra URL, domini e IP'.",
+          "module": { "href": "/threat-intel?case={case}", "label": "Threat Intelligence" },
+          "think": ["Cosa può bloccare concretamente il team IT (dominio, URL, IP)?", "Con chi posso condividerli (TLP)?"],
+          "check": { "type": "ioc", "min": 2 },
+          "quiz": {
+            "type": "single",
+            "prompt": "Che TLP assegni agli indicatori da condividere con l'IT interno ma non pubblicamente?",
+            "options": [
+              { "value": "clear", "label": "TLP:CLEAR" },
+              { "value": "amber", "label": "TLP:AMBER" },
+              { "value": "red", "label": "TLP:RED" }
+            ]
+          }
+        },
+        {
+          "id": "s6",
+          "title": "Dai un nome ai comportamenti (ATT&CK)",
+          "instruction": "Mappa sul caso almeno una tecnica MITRE ATT&CK supportata dalle evidenze. Imposta 'fatto verificato' solo se un'evidenza la dimostra; il resto resta ipotesi.",
+          "module": { "href": "/investigations/{case}?tab=attack", "label": "Scheda ATT&CK del caso" },
+          "think": ["Quale comportamento ho osservato davvero (link, allegato, impersonificazione)?", "Cosa invece sto solo supponendo (es. raccolta credenziali)?"],
+          "check": { "type": "attack", "any_of": ["T1566", "T1684.001", "T1598"] },
+          "quiz": {
+            "type": "single",
+            "prompt": "Non hai aperto la pagina di login. Come mappi T1598.003 (raccolta di credenziali tramite link)?",
+            "options": [
+              { "value": "fact", "label": "Fatto verificato" },
+              { "value": "hyp", "label": "Ipotesi analitica, con confidenza moderata" },
+              { "value": "none", "label": "Non va mai mappata" }
+            ]
+          }
+        },
+        {
+          "id": "s7",
+          "title": "Scrivi la risposta per chi decide",
+          "instruction": "Crea un Phishing Investigation Report sul caso, compila Executive Summary (massimo 5 righe), Raccomandazioni e Limitazioni, esporta il PDF e finalizza la versione.",
+          "module": { "href": "/reports/new?case={case}", "label": "Nuovo report" },
+          "think": ["Laura e il suo responsabile devono capire in 30 secondi cosa fare.", "Ho dichiarato cosa non ho verificato?"],
+          "check": { "type": "report", "status": "final" },
+          "quiz": {
+            "type": "text",
+            "prompt": "Incolla qui l'Executive Summary che hai scritto (verrà confrontato con quello del senior).",
+            "min_length": 120
+          }
+        }
+      ],
+      "sources": []
+    },
+    "keys": {
+      "steps": {
+        "s1": { "correct": "b", "explanation": "Un buon obiettivo è una domanda a cui si può rispondere con evidenze e che serve a una decisione. 'Analizzare l'email' è un'attività, non un obiettivo; 'dimostrare che il fornitore è fraudolento' parte da una conclusione e probabilmente è sbagliato (il fornitore è impersonato).", "senior": "Scrivo sempre l'obiettivo prima di aprire qualsiasi strumento: mi dice cosa raccogliere e quando fermarmi. Qui la domanda vera include 'qualcuno ha già pagato?': è la prima cosa che chiederei a Laura, al telefono, mentre apro il caso." },
+        "s2": { "correct": "b", "explanation": "L'hash è un'impronta del contenuto: se il file cambia anche di un bit, l'hash cambia. Non cifra e non rileva malware.", "senior": "Salvo l'originale prima di qualsiasi analisi: se in seguito l'incidente diventa una denuncia o una contestazione col fornitore, dovrò dimostrare cosa ho analizzato. L'hash da solo non è catena di custodia, ma è il primo mattone." },
+        "s3": { "correct": ["attach", "dmarc", "reply", "spf"], "explanation": "SPF/DMARC fail, Reply-To divergente e doppia estensione sono fatti tecnici verificabili. Il tono è un indizio debole e soggettivo.", "senior": "Guardo prima gli header aggiunti dal nostro server (Authentication-Results, Received), poi Reply-To e Return-Path, poi i link come testo. Non apro mai l'allegato: il nome .pdf.zip mi basta per classificarlo come rischioso e passarlo, se serve, a chi ha una sandbox." },
+        "s4": { "correct": "fact", "explanation": "L'età del dominio è un dato oggettivo (RDAP) che aumenta il sospetto, ma un'evidenza va sempre pesata insieme alle altre: domini nuovi legittimi esistono.", "senior": "Nella motivazione del rischio metto 3 elementi indipendenti: età del dominio, configurazione email permissiva, uso nel messaggio fraudolento. Tre indizi indipendenti valgono più di uno forte." },
+        "s5": { "correct": "amber", "explanation": "TLP:AMBER limita la condivisione all'organizzazione (e ai suoi fornitori che devono agire). CLEAR è pubblico, RED è solo per i destinatari diretti.", "senior": "Do al team IT gli indicatori già pronti da bloccare, con data e contesto. Un IOC senza contesto ('perché è cattivo? da quando?') diventa inutile dopo poche settimane." },
+        "s6": { "correct": "hyp", "explanation": "Senza aver visto la pagina non puoi affermare che raccolga credenziali: è un'ipotesi plausibile, da etichettare come tale.", "senior": "Mappo come fatti T1566.002 e T1684.001 (link e impersonificazione: li vedo negli header e nel testo). La raccolta credenziali resta ipotesi finché qualcuno non analizza la pagina in modo sicuro." },
+        "s7": { "explanation": "Confronta il tuo testo con quello del senior: verdetto, evidenze principali, azioni già fatte, cosa fare, limiti.", "senior": "Phishing con confidenza alta. L'email impersona il fornitore Aurora Logistica: l'autenticazione del mittente fallisce, le risposte e i link portano a un dominio registrato di recente. Non pagare e non aprire l'allegato. Indicatori inviati all'IT per il blocco. Da verificare: altri destinatari e eventuali clic. Limite: pagina di destinazione e allegato non analizzati." }
+      },
+      "debrief": {
+        "summary": "Hai lavorato un caso completo: domanda, prova, analisi, verifica, indicatori, ATT&CK, report. È esattamente la sequenza che userai per la maggior parte delle segnalazioni reali.",
+        "lessons": [
+          "L'obiettivo investigativo guida tutto il resto: scrivilo sempre per primo.",
+          "Gli header aggiunti dai tuoi server sono affidabili, il From no.",
+          "Fatti e ipotesi vanno etichettati diversamente anche in ATT&CK.",
+          "Il valore per l'azienda sta nelle azioni: blocco, avviso, verifica dei clic."
+        ],
+        "next": ["Rifai la missione con il campione 'Falso corriere' senza guardare le note.", "Passa al caso reale 'PagoPA: le finte multe' per vedere lo stesso schema su una campagna vera."]
+      }
+    }
+  },
+  {
+    "slug": "dominio-sosia-del-brand",
+    "kind": "guided",
+    "sort_order": 2,
+    "title": "Qualcuno si spaccia per noi: il dominio sosia",
+    "summary": "Un cliente segnala email da un dominio molto simile a quello aziendale. Raccogli dati passivi, valuti il rischio, ricostruisci la cronologia e proponi azioni di Digital Risk Protection.",
+    "difficulty": "beginner",
+    "category": "brand_impersonation",
+    "roles": ["Digital Risk Analyst", "CTI Analyst", "OSINT Analyst"],
+    "estimated_minutes": 40,
+    "content": {
+      "request": {
+        "from": "Marco Neri, Customer Care di Velora Componenti (personaggio fittizio)",
+        "channel": "Ticket interno",
+        "text": "Un cliente ci ha scritto che ha ricevuto email da 'supporto' di Velora per aggiornare le coordinate bancarie. Il dominio è velora-componenti-supporto.example, ma il nostro è velora-componenti.example. Ci state già lavorando?"
+      },
+      "context": "La Digital Risk Protection si occupa di ciò che minaccia l'organizzazione fuori dal suo perimetro: domini sosia, profili falsi, fughe di dati. La domanda per chi decide è: quanto è grave e cosa facciamo (blocco, avviso ai clienti, segnalazione al registrar)?",
+      "materials": [
+        { "type": "link", "href": "/training/suspicious-domain-investigation", "label": "Documenti dell'esercitazione 'Suspicious Domain' (record DNS e RDAP di riferimento)" }
+      ],
+      "steps": [
+        {
+          "id": "s1",
+          "title": "Apri il caso di Brand Impersonation",
+          "instruction": "Crea un caso di tipo Brand Impersonation, collegalo alla missione e scrivi l'obiettivo investigativo.",
+          "module": { "href": "/investigations/new?category=brand_impersonation&title=Dominio%20sosia%20velora-componenti-supporto.example", "label": "Nuovo caso" },
+          "think": ["Chi è danneggiato: l'azienda, i clienti o entrambi?", "Che cosa deve decidere il Customer Care oggi?"],
+          "check": { "type": "objective", "min": 40 },
+          "quiz": {
+            "type": "single",
+            "prompt": "Qual è la priorità operativa principale?",
+            "options": [
+              { "value": "a", "label": "Identificare chi ha registrato il dominio" },
+              { "value": "b", "label": "Ridurre subito il danno: avvisare i clienti e bloccare il dominio, poi approfondire" },
+              { "value": "c", "label": "Aspettare altre segnalazioni per avere più dati" }
+            ]
+          }
+        },
+        {
+          "id": "s2",
+          "title": "Raccogli i dati passivi del dominio",
+          "instruction": "Analizza il dominio sosia e quello legittimo con 'Confronta due domini'. Poi salva l'analisi del dominio sosia sul caso con rischio motivato.",
+          "module": { "href": "/domains?d=velora-componenti-supporto.example", "label": "Domain Analysis" },
+          "think": ["Quali differenze ci sono nella configurazione email?", "Perché non visito il sito del dominio sosia?"],
+          "check": { "type": "domain" },
+          "quiz": {
+            "type": "single",
+            "prompt": "Il record SPF del dominio sosia è 'v=spf1 +all'. Cosa significa?",
+            "options": [
+              { "value": "a", "label": "Solo i server dichiarati possono inviare posta" },
+              { "value": "b", "label": "Qualsiasi server può inviare posta a nome del dominio" },
+              { "value": "c", "label": "Il dominio non invia posta" }
+            ]
+          }
+        },
+        {
+          "id": "s3",
+          "title": "Documenta le informazioni con il loro stato",
+          "instruction": "Registra nell'OSINT Workspace almeno 2 risultati collegati al caso: uno come 'Fatto verificato' (es. data di registrazione da RDAP) e uno come 'Ipotesi analitica' (es. finalità di frode sui pagamenti).",
+          "module": { "href": "/osint?case={case}", "label": "OSINT Workspace" },
+          "think": ["Quale fonte ha prodotto il dato e quanto è affidabile?", "La mia ipotesi è formulata come ipotesi, non come certezza?"],
+          "check": { "type": "finding", "min": 2 },
+          "quiz": {
+            "type": "single",
+            "prompt": "Il registrante risulta 'REDACTED FOR PRIVACY'. Come lo valuti?",
+            "options": [
+              { "value": "a", "label": "Prova di malevolenza" },
+              { "value": "b", "label": "Elemento neutro, comune dopo il GDPR" },
+              { "value": "c", "label": "Prova che il dominio è legittimo" }
+            ]
+          }
+        },
+        {
+          "id": "s4",
+          "title": "Ricostruisci la cronologia",
+          "instruction": "Aggiungi alla timeline del caso almeno 3 eventi (registrazione del dominio, emissione del certificato, prima email ai clienti), distinguendo la data dell'evento dalla data in cui l'hai saputo.",
+          "module": { "href": "/investigations/{case}?tab=timeline", "label": "Timeline del caso" },
+          "think": ["Cosa è successo prima che ce ne accorgessimo?", "Quanto tempo ha avuto l'attaccante per preparare la campagna?"],
+          "check": { "type": "timeline", "min": 3 },
+          "quiz": {
+            "type": "single",
+            "prompt": "Perché la timeline distingue 'data dell'evento' e 'data di acquisizione'?",
+            "options": [
+              { "value": "a", "label": "Per misurare il ritardo tra l'evento e la nostra consapevolezza (tempo di rilevamento)" },
+              { "value": "b", "label": "È solo una formalità" },
+              { "value": "c", "label": "Per nascondere i ritardi" }
+            ]
+          }
+        },
+        {
+          "id": "s5",
+          "title": "Collega ad ATT&CK e scrivi le azioni",
+          "instruction": "Mappa T1583.001 (Acquire Infrastructure: Domains) sul caso, poi crea il report di tipo Digital Risk Assessment con raccomandazioni concrete e finalizzalo.",
+          "module": { "href": "/investigations/{case}?tab=attack", "label": "Scheda ATT&CK" },
+          "think": ["Quali azioni posso chiedere oggi (blocco, avviso clienti, abuse report)?", "Quali controlli preventivi propongo (monitoraggio CT, DMARC p=reject)?"],
+          "check": { "type": "report", "status": "final" },
+          "quiz": {
+            "type": "multi",
+            "prompt": "Quali azioni sono appropriate e lecite?",
+            "options": [
+              { "value": "block", "label": "Bloccare il dominio su posta e proxy aziendali" },
+              { "value": "notify", "label": "Avvisare i clienti con un messaggio dai canali ufficiali" },
+              { "value": "abuse", "label": "Segnalare abuso a registrar e hosting provider" },
+              { "value": "ddos", "label": "Rendere irraggiungibile il sito sosia con un attacco" },
+              { "value": "monitor", "label": "Monitorare i log di Certificate Transparency per nuovi domini simili" }
+            ]
+          }
+        }
+      ],
+      "sources": []
+    },
+    "keys": {
+      "steps": {
+        "s1": { "correct": "b", "explanation": "Prima si riduce il danno in corso; l'identificazione dell'autore è spesso impossibile e non urgente.", "senior": "Nella prima ora il mio lavoro è far uscire due comunicazioni: blocco all'IT e testo di avviso per i clienti al Customer Care. L'analisi approfondita viene dopo." },
+        "s2": { "correct": "b", "explanation": "'+all' autorizza qualsiasi host: l'SPF non protegge e il dominio è pronto per inviare posta fraudolenta.", "senior": "Confronto sempre con il dominio legittimo: il contrasto (p=reject e SPF stretto contro +all senza DMARC) è il modo più chiaro per spiegarlo a un non tecnico." },
+        "s3": { "correct": "b", "explanation": "La redazione dei dati del registrante è la norma dopo il GDPR: non è indicativa da sola.", "senior": "Scrivo l'ipotesi con una formula prudente: 'è probabile che il dominio sia stato registrato per frodi sui pagamenti (confidenza moderata)', e indico cosa la confermerebbe." },
+        "s4": { "correct": "a", "explanation": "La differenza tra le due date misura il tempo di rilevamento ed è un indicatore di maturità della difesa.", "senior": "Qui il dominio è stato registrato 6 giorni prima della segnalazione: è un dato che il management capisce subito e che giustifica un monitoraggio proattivo dei domini." },
+        "s5": { "correct": ["abuse", "block", "monitor", "notify"], "explanation": "Attaccare il sito è illegale e controproducente. Le azioni difensive e la segnalazione agli intermediari sono la strada corretta.", "senior": "Nel report propongo azioni in tre orizzonti: oggi (blocco, avviso), questa settimana (abuse report, takedown), strutturale (monitoraggio CT, DMARC p=reject, procedura di verifica delle variazioni IBAN)." }
+      },
+      "debrief": {
+        "summary": "Hai gestito un caso di Digital Risk Protection: dati passivi, stato delle informazioni, cronologia, azioni lecite e proporzionate.",
+        "lessons": [
+          "Si lavora solo con dati passivi: il sito dell'attaccante non si visita.",
+          "Il confronto con il dominio legittimo rende la valutazione comprensibile.",
+          "Le raccomandazioni migliori hanno un orizzonte temporale (oggi / settimana / strutturale)."
+        ],
+        "next": ["Prova Domain Analysis su un dominio reale della tua azienda o università e confronta la configurazione email."]
+      }
+    }
+  },
+  {
+    "slug": "fornitore-da-verificare",
+    "kind": "guided",
+    "sort_order": 3,
+    "title": "Possiamo fidarci di questo fornitore?",
+    "summary": "L'ufficio acquisti chiede una verifica rapida su un fornitore prima della firma. Valuti le fonti, gestisci le incongruenze e consegni una nota di due diligence.",
+    "difficulty": "beginner",
+    "category": "corporate_due_diligence",
+    "roles": ["Due Diligence Analyst", "Corporate Intelligence Analyst", "OSINT Analyst"],
+    "estimated_minutes": 50,
+    "content": {
+      "request": {
+        "from": "Ufficio Acquisti (fittizio)",
+        "channel": "Email",
+        "text": "Dobbiamo firmare venerdì un contratto triennale con Velora Componenti S.p.A. Ci fate una verifica veloce da fonti aperte? Ci interessa soprattutto se sono affidabili e se le certificazioni che dichiarano sono vere."
+      },
+      "context": "La due diligence da fonti aperte è una delle attività più richieste a chi ha un profilo giuridico-investigativo. Usi i documenti fittizi dell'esercitazione 'OSINT Corporate Investigation'.",
+      "materials": [
+        { "type": "link", "href": "/training/osint-corporate-investigation", "label": "Documenti di Velora Componenti (registro, sito, comunicato, certificazioni, stampa)" }
+      ],
+      "steps": [
+        {
+          "id": "s1",
+          "title": "Apri il caso di due diligence",
+          "instruction": "Crea un caso di tipo Corporate Due Diligence, collegalo e scrivi l'obiettivo (cosa deve sapere l'ufficio acquisti per decidere).",
+          "module": { "href": "/investigations/new?category=corporate_due_diligence&title=Due%20diligence%20Velora%20Componenti", "label": "Nuovo caso" },
+          "think": ["Qual è la decisione (firmare, firmare con condizioni, non firmare)?", "Quali limiti ho (solo fonti aperte, pochi giorni)?"],
+          "check": { "type": "objective", "min": 40 },
+          "quiz": {
+            "type": "single",
+            "prompt": "Cosa NON rientra in una due diligence da fonti aperte lecita?",
+            "options": [
+              { "value": "a", "label": "Consultare registri pubblici e notizie" },
+              { "value": "b", "label": "Creare un profilo falso per contattare i dipendenti del fornitore" },
+              { "value": "c", "label": "Verificare le certificazioni dichiarate nei registri degli enti di certificazione" }
+            ]
+          }
+        },
+        {
+          "id": "s2",
+          "title": "Registra le fonti con la loro affidabilità",
+          "instruction": "Registra nell'OSINT Workspace almeno 4 risultati da almeno 3 fonti diverse (registro, sito, certificazioni, stampa), ciascuno con affidabilità A–F e stato dell'informazione.",
+          "module": { "href": "/osint?case={case}", "label": "OSINT Workspace" },
+          "think": ["Questa fonte è primaria o è una dichiarazione dell'interessato?", "Chi ha interesse a dire cosa?"],
+          "check": { "type": "sources", "min": 3 },
+          "quiz": {
+            "type": "single",
+            "prompt": "Il sito del fornitore dichiara la certificazione ISO 27001. Che affidabilità ha questa fonte per quel dato?",
+            "options": [
+              { "value": "a", "label": "A: è il sito ufficiale" },
+              { "value": "b", "label": "Bassa o non valutabile: è una dichiarazione autoriferita da verificare su fonte indipendente" },
+              { "value": "c", "label": "Non serve valutarla" }
+            ]
+          }
+        },
+        {
+          "id": "s3",
+          "title": "Segnala le contraddizioni",
+          "instruction": "Etichetta almeno un risultato come 'Informazione contraddittoria' (ad esempio la certificazione dichiarata ma revocata) spiegando nelle note di verifica perché.",
+          "module": { "href": "/osint?case={case}", "label": "OSINT Workspace" },
+          "think": ["Contraddittorio non significa falso: cosa potrebbe spiegare la discrepanza?", "Quale verifica la risolverebbe?"],
+          "check": { "type": "finding", "statuses": ["contradictory"] },
+          "quiz": {
+            "type": "single",
+            "prompt": "Il sito dice 'fondata nel 2009', il registro dice 2017. Cosa scrivi al cliente?",
+            "options": [
+              { "value": "a", "label": "Che il fornitore mente" },
+              { "value": "b", "label": "Che la data verificata è il 2017 e che il 2009 non trova riscontro: va chiarito (es. società predecessore)" },
+              { "value": "c", "label": "Niente, è un dettaglio" }
+            ]
+          }
+        },
+        {
+          "id": "s4",
+          "title": "Consegna la nota di due diligence",
+          "instruction": "Crea un report Corporate Due Diligence con conclusioni proporzionate, raccomandazioni operative (es. condizioni per la firma) e limitazioni, poi finalizzalo.",
+          "module": { "href": "/reports/new?case={case}", "label": "Nuovo report" },
+          "think": ["Le mie conclusioni sono proporzionate alle evidenze?", "Cosa può chiedere l'ufficio acquisti al fornitore prima di venerdì?"],
+          "check": { "type": "report", "status": "final" },
+          "quiz": {
+            "type": "text",
+            "prompt": "Scrivi la raccomandazione principale per l'ufficio acquisti (2–3 righe).",
+            "min_length": 80
+          }
+        }
+      ],
+      "sources": []
+    },
+    "keys": {
+      "steps": {
+        "s1": { "correct": "b", "explanation": "Profili falsi e pretesti verso i dipendenti escono dalle fonti aperte e possono violare norme e codici deontologici.", "senior": "Scrivo nell'obiettivo anche i limiti: 'solo fonti aperte, entro venerdì'. Così il cliente sa cosa aspettarsi e io so quando fermarmi." },
+        "s2": { "correct": "b", "explanation": "Le dichiarazioni dell'interessato vanno verificate su fonti indipendenti; il sito è attendibile solo su ciò che l'azienda dichiara di sé.", "senior": "Valuto l'affidabilità della fonte per quel dato specifico: lo stesso sito è affidabile per il numero di telefono, non per le certificazioni." },
+        "s3": { "correct": "b", "explanation": "Si riporta il dato verificato, si segnala la discrepanza senza accusare e si propone come risolverla.", "senior": "Le contraddizioni sono la parte più preziosa della nota: dicono al cliente cosa chiedere al fornitore prima di firmare." },
+        "s4": { "explanation": "Confronta con la raccomandazione del senior.", "senior": "Firmare solo dopo aver ottenuto: visura aggiornata, certificato ISO 27001 in corso di validità (quello dichiarato risulta revocato) e chiarimento sul CEO indicato sul sito. In alternativa, inserire nel contratto requisiti di sicurezza verificabili." }
+      },
+      "debrief": {
+        "summary": "Hai applicato il metodo della due diligence: fonti valutate, contraddizioni documentate, raccomandazioni che servono a una decisione.",
+        "lessons": ["La fonte primaria prevale sulle dichiarazioni autoriferite.", "Contraddittorio non significa falso.", "La raccomandazione deve dire cosa fare prima della firma."],
+        "next": ["Applica lo stesso metodo a una società reale usando solo fonti pubbliche e senza dati personali non necessari."]
+      }
+    }
+  },
+  {
+    "slug": "brief-settimanale-ciso",
+    "kind": "guided",
+    "sort_order": 4,
+    "title": "Il brief del lunedì per il CISO",
+    "summary": "Ogni settimana il CISO vuole sapere cosa sta colpendo l'Italia e cosa riguarda l'azienda. Leggi la sintesi settimanale reale del CERT-AGID e produci un Intelligence Brief di una pagina. Da ripetere ogni settimana.",
+    "difficulty": "intermediate",
+    "category": "cyber_threat_intelligence",
+    "roles": ["CTI Analyst", "Cybersecurity Analyst", "GRC Analyst"],
+    "estimated_minutes": 60,
+    "content": {
+      "request": {
+        "from": "CISO dell'azienda (personaggio fittizio)",
+        "channel": "Riunione del lunedì",
+        "text": "Mi prepari per stamattina una pagina su cosa è successo la settimana scorsa in Italia lato phishing e malware? Mi interessa cosa ci riguarda e cosa dobbiamo fare, non l'elenco di tutto."
+      },
+      "context": "Il brief periodico è il prodotto più tipico della Cyber Threat Intelligence. La fonte è reale: la 'Sintesi riepilogativa delle campagne malevole' pubblicata ogni settimana dal CERT-AGID. Il lavoro dell'analista è selezionare, contestualizzare e raccomandare.",
+      "materials": [
+        { "type": "link", "href": "https://cert-agid.gov.it/tag/riepilogo/", "label": "CERT-AGID — sintesi settimanali delle campagne malevole (fonte reale)", "external": true },
+        { "type": "link", "href": "https://www.acn.gov.it/portale/w/operational-summary-maggio-2026", "label": "ACN — Operational Summary mensile (esempio, fonte reale)", "external": true }
+      ],
+      "steps": [
+        {
+          "id": "s1",
+          "title": "Apri il caso CTI della settimana",
+          "instruction": "Crea un caso di tipo Cyber Threat Intelligence chiamato con la settimana (es. 'Brief CTI 16-20 novembre 2026'), collegalo e scrivi l'obiettivo.",
+          "module": { "href": "/investigations/new?category=cyber_threat_intelligence&title=Brief%20CTI%20settimanale", "label": "Nuovo caso" },
+          "think": ["Per chi scrivo e quanto tempo ha per leggere?", "Quali sono i nostri asset e il nostro settore?"],
+          "check": { "type": "objective", "min": 40 },
+          "quiz": {
+            "type": "single",
+            "prompt": "Che cosa distingue un brief di intelligence da una rassegna stampa?",
+            "options": [
+              { "value": "a", "label": "È più lungo" },
+              { "value": "b", "label": "Seleziona ciò che è rilevante per l'organizzazione, ne valuta l'impatto e propone azioni" },
+              { "value": "c", "label": "Usa solo fonti a pagamento" }
+            ]
+          }
+        },
+        {
+          "id": "s2",
+          "title": "Leggi la fonte e registra i fatti rilevanti",
+          "instruction": "Apri l'ultima sintesi settimanale del CERT-AGID. Registra nell'OSINT Workspace almeno 3 risultati (es. numero di campagne, famiglie malware principali, temi più usati come esca), con fonte, URL, data e affidabilità.",
+          "module": { "href": "/osint?case={case}", "label": "OSINT Workspace" },
+          "think": ["Quali temi colpirebbero i nostri dipendenti (fatture, PagoPA, INPS, spedizioni)?", "Quali famiglie malware sono più diffuse e come arrivano?"],
+          "check": { "type": "finding", "min": 3 },
+          "quiz": {
+            "type": "single",
+            "prompt": "Che affidabilità assegni a una sintesi pubblicata dal CERT-AGID per i dati che riporta?",
+            "options": [
+              { "value": "a", "label": "A o B: fonte istituzionale con osservazione diretta delle campagne" },
+              { "value": "b", "label": "E: le fonti pubbliche non sono affidabili" },
+              { "value": "c", "label": "F: non si può valutare" }
+            ]
+          }
+        },
+        {
+          "id": "s3",
+          "title": "Collega i fenomeni ad ATT&CK",
+          "instruction": "Mappa sul caso almeno 2 tecniche ATT&CK che descrivono le campagne della settimana (ad esempio phishing con allegato o link, esecuzione da parte dell'utente).",
+          "module": { "href": "/investigations/{case}?tab=attack", "label": "Scheda ATT&CK" },
+          "think": ["Quali tecniche ritornano ogni settimana?", "Quali mitigazioni e rilevamenti suggerisce ATT&CK per queste tecniche?"],
+          "check": { "type": "attack", "min": 2 },
+          "quiz": {
+            "type": "single",
+            "prompt": "Perché mappare il brief su ATT&CK?",
+            "options": [
+              { "value": "a", "label": "Per collegare la minaccia a mitigazioni e rilevamenti concreti e confrontare le settimane" },
+              { "value": "b", "label": "Perché è obbligatorio per legge" },
+              { "value": "c", "label": "Per attribuire le campagne a un gruppo" }
+            ]
+          }
+        },
+        {
+          "id": "s4",
+          "title": "Scrivi il brief di una pagina",
+          "instruction": "Crea un Executive Intelligence Brief: 3 punti chiave, rilevanza per l'azienda, 3 azioni raccomandate, fonti e limiti. Finalizzalo.",
+          "module": { "href": "/reports/new?case={case}", "label": "Nuovo report" },
+          "think": ["Il CISO lo legge in 2 minuti e sa cosa fare?", "Ho citato le fonti e la data?"],
+          "check": { "type": "report", "status": "final" },
+          "quiz": {
+            "type": "text",
+            "prompt": "Incolla i tuoi 3 punti chiave.",
+            "min_length": 120
+          }
+        }
+      ],
+      "sources": [
+        { "title": "Sintesi riepilogative settimanali delle campagne malevole", "publisher": "CERT-AGID", "url": "https://cert-agid.gov.it/tag/riepilogo/", "date": "settimanale" },
+        { "title": "Report riepilogativo sulle tendenze delle campagne malevole analizzate nel 2025", "publisher": "CERT-AGID", "url": "https://cert-agid.gov.it/news/report-riepilogativo-sulle-tendenze-delle-campagne-malevole-analizzate-dal-cert-agid-nel-2025/", "date": "febbraio 2026" }
+      ]
+    },
+    "keys": {
+      "steps": {
+        "s1": { "correct": "b", "explanation": "L'intelligence è informazione selezionata, valutata e orientata a una decisione.", "senior": "Prima di leggere la fonte mi ricordo chi siamo: settore, fornitori, servizi esposti. Il brief deve rispondere a 'cosa cambia per noi'." },
+        "s2": { "correct": "a", "explanation": "Fonte istituzionale che osserva direttamente le campagne: affidabilità alta per i dati che riporta, fermo restando che descrive le campagne osservate, non tutte quelle esistenti.", "senior": "Non copio i numeri: scelgo i 2–3 fatti che hanno un impatto per noi (es. aumento di campagne via PEC se usiamo molto la PEC con i fornitori)." },
+        "s3": { "correct": "a", "explanation": "ATT&CK rende confrontabili settimane e fonti diverse e collega ogni tecnica a mitigazioni e rilevamenti.", "senior": "Tengo un conteggio delle tecniche settimana per settimana: dopo un mese vedo il trend e posso chiedere investimenti mirati (es. formazione sul phishing con allegato)." },
+        "s4": { "explanation": "Confronta con l'esempio del senior.", "senior": "1) Le campagne della settimana usano soprattutto esche a tema pagamenti e spedizioni: avvisare amministrazione e logistica. 2) Gli infostealer restano la minaccia malware principale: verificare il blocco degli allegati compressi e degli script. 3) Proseguono i falsi avvisi della PA: ricordare che PA e INPS non chiedono documenti via SMS. Fonti: CERT-AGID, sintesi settimanale; limiti: campagne osservate, non esaustive." }
+      },
+      "debrief": {
+        "summary": "Hai prodotto il deliverable più tipico della CTI. Ripeti questa missione ogni lunedì: in un mese avrai 4 brief per il portfolio e un trend da raccontare a un colloquio.",
+        "lessons": ["Selezionare è più importante che riportare tutto.", "Ogni punto chiave deve avere una conseguenza pratica.", "Fonte, data e limiti sempre in fondo al brief."],
+        "next": ["Ripeti la missione la prossima settimana con la nuova sintesi CERT-AGID.", "Apri i casi reali per approfondire le campagne più frequenti."]
+      }
+    }
+  }
+]

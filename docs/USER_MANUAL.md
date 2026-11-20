@@ -68,6 +68,13 @@ Inserisci un dominio (anche un URL: viene estratto l'host). Il backend raccoglie
 4. **Esporta PDF**: scarica il file e lo archivia nel bucket privato. Le sezioni vuote sono indicate come non compilate.
 5. **Finalizza versione**: la versione diventa immutabile; per correggere usa **Nuova versione**.
 
+## Missioni e casi reali
+Il punto di partenza consigliato per imparare il mestiere.
+- **Missioni guidate**: arriva una richiesta (cliente, CISO, ufficio acquisti) e la risolvi passo per passo con i moduli veri della piattaforma. Ogni passo indica cosa fare, dove farlo e su cosa riflettere.
+- **Casi reali**: fenomeni che colpiscono ogni giorno aziende e PA italiane. Ogni caso ha un **dossier** (come funziona, dati con fonte, tecniche ATT&CK, segnali d'allarme, impatto, difese), materiali ricostruiti con dati fittizi e l'elenco delle fonti. Le fonti secondarie (stampa, vendor) sono etichettate come tali.
+- **Come si gioca**: *Inizia* → crea il caso dal link del primo passo e **collegalo** alla missione → per ogni passo lavora nel modulo indicato, rispondi alla domanda e premi **Verifica il passo**: il database controlla il lavoro reale sul caso (obiettivo, attività, analisi salvate, timeline, tecniche mappate, report finalizzato) e sblocca la **nota del senior**.
+- **Concludi** quando tutti i passi sono verificati: vedi il debriefing con lezioni e prossimi passi. Il punteggio è formativo.
+
 ## Training Academy
 - Scegli un'esercitazione: scenario, briefing, obiettivo, documenti/dataset, attività, strumenti, istruzioni, tempo indicativo, griglia di valutazione.
 - **Inizia** → rispondi alle domande, scrivi la consegna, autovaluta la griglia; *Salva bozza* in qualsiasi momento.

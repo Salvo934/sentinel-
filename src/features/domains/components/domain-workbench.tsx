@@ -15,8 +15,8 @@ import { cn } from "@/lib/utils";
 import { analyzeDomainAction, saveDomainAnalysisAction, type AnalyzeResult } from "../actions";
 import { DomainReportView } from "./domain-report-view";
 
-function Slot({ label, onResult }: { label: string; onResult: (r: AnalyzeResult | null) => void }) {
-  const [value, setValue] = useState("");
+function Slot({ label, onResult, initial = "" }: { label: string; onResult: (r: AnalyzeResult | null) => void; initial?: string }) {
+  const [value, setValue] = useState(initial);
   const [pending, start] = useTransition();
   return (
     <form
@@ -43,7 +43,7 @@ function Slot({ label, onResult }: { label: string; onResult: (r: AnalyzeResult 
   );
 }
 
-export function DomainWorkbench({ cases }: { cases: (readonly [string, string])[] }) {
+export function DomainWorkbench({ cases, initialDomain }: { cases: (readonly [string, string])[]; initialDomain?: string }) {
   const [compare, setCompare] = useState(false);
   const [a, setA] = useState<AnalyzeResult | null>(null);
   const [b, setB] = useState<AnalyzeResult | null>(null);
@@ -70,7 +70,7 @@ export function DomainWorkbench({ cases }: { cases: (readonly [string, string])[
               <CardTitle>{slot.label}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Slot label={slot.label} onResult={slot.set} />
+              <Slot label={slot.label} onResult={slot.set} initial={slot.label === "Dominio da analizzare" ? initialDomain : undefined} />
               {slot.result ? <DomainReportView report={slot.result.report} linkedCases={slot.result.linkedCases} /> : null}
             </CardContent>
           </Card>
