@@ -11,7 +11,7 @@ Browser ──(cookie di sessione)──► Next.js 16 (App Router, Server Compo
                               ├─ PostgreSQL + RLS (autorizzazione definitiva)
                               ├─ Storage (4 bucket privati, policy su storage.objects)
                               └─ RPC SECURITY DEFINER (ruoli, demo, training, audit)
-Backend Next.js ──► DNS resolver di sistema, RDAP (allow-list + controllo IP pubblici)
+Backend Next.js (Cloudflare Workers) ──► DNS-over-HTTPS 1.1.1.1, RDAP (allow-list + controllo IP pubblici)
 ```
 
 **Scelte principali**
@@ -79,7 +79,7 @@ Tutti privati; accesso tramite signed URL di 60 secondi con `Content-Disposition
 | SQL injection | query parametrizzate del client Supabase; input di ricerca ripulito dai metacaratteri PostgREST |
 | XSS | React escaping; nessun `dangerouslySetInnerHTML`; email/HTML mostrati come testo; URL defanged e non cliccabili |
 | CSRF | Server Actions con controllo Origin; route di download solo GET idempotenti con redirect a signed URL |
-| SSRF | nessun fetch verso URL dell'utente; RDAP solo HTTPS, redirect gestiti manualmente, allow-list host, risoluzione DNS con blocco di IP privati/riservati, timeout e limite di dimensione |
+| SSRF | nessun fetch verso URL dell'utente; in produzione il flag Workers `global_fetch_strictly_public` impedisce fetch verso indirizzi privati; RDAP solo HTTPS, redirect gestiti manualmente, allow-list host, risoluzione DNS con blocco di IP privati/riservati, timeout e limite di dimensione |
 | Abuso / costi | rate limit 10 interrogazioni/min per utente (DB), cache 10 min, log delle interrogazioni |
 | Upload malevoli | allow-list estensioni, magic bytes, 20 MB, bucket privato, download forzato |
 | Divulgazione di errori | messaggi generici all'utente, dettagli solo nei log server |

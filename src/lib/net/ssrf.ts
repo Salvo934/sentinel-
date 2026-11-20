@@ -59,6 +59,7 @@ export function isBlockedAddress(ip: string): boolean {
 /** Outbound hosts the backend may contact over HTTPS. */
 export const ALLOWED_OUTBOUND_HOSTS = new Set([
   "rdap.org",
+  "cloudflare-dns.com",
   "data.iana.org",
   // RDAP servers commonly referenced by the IANA bootstrap file.
   "rdap.verisign.com",

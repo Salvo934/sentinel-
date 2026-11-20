@@ -2,7 +2,7 @@
   "name": "sentinel-intelligence",
   "version": "0.1.0",
   "private": true,
-  "description": "Sentinel Intelligence — piattaforma OSINT, Cyber Threat Intelligence e Digital Investigations (MVP, Fase 1)",
+  "description": "Sentinel Intelligence \u2014 piattaforma OSINT, Cyber Threat Intelligence e Digital Investigations (MVP, Fase 1)",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -17,7 +17,10 @@
     "db:push": "supabase db push",
     "db:types": "supabase gen types typescript --local > src/types/database.ts",
     "db:test": "supabase test db",
-    "db:test:local": "bash scripts/db/test-local.sh"
+    "db:test:local": "bash scripts/db/test-local.sh",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "engines": {
     "node": ">=22"
@@ -46,6 +49,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.20.18",
     "@tailwindcss/postcss": "^4.3.3",
     "@tailwindcss/turbopack": "^4.3.3",
     "@testing-library/dom": "^10.4.2",
@@ -61,6 +65,7 @@
     "supabase": "^3.2.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3",
-    "vitest": "^5.1.1"
+    "vitest": "^5.1.1",
+    "wrangler": "^4.165.0"
   }
 }

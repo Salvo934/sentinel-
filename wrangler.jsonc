@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sentinel-intelligence",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-01",
+  // global_fetch_strictly_public: fetch() can never reach private/internal
+  // addresses (defence in depth for the RDAP client, see src/lib/net/ssrf.ts).
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  // esbuild keepNames breaks the next-themes inline script ("__name is not defined").
+  "keep_names": false,
+  // Production URL is the workers.dev route; per-version preview URLs are off
+  // because they are not in Supabase Auth's redirect allow-list.
+  "workers_dev": true,
+  "preview_urls": false,
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS",
+  },
+  "observability": {
+    "enabled": true,
+  },
+}

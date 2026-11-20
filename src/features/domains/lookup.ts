@@ -1,7 +1,5 @@
 import "server-only";
 
-import { lookup, Resolver } from "node:dns/promises";
-
 import { isAllowedOutboundUrl, isBlockedAddress } from "@/lib/net/ssrf";
 
 import { computeAnomalies, EMPTY_DNS, isReservedDomain, simulatedReport, type DnsRecords, type DomainReport, type RdapSummary } from "./model";
@@ -20,28 +18,76 @@ export function getCachedReport(domain: string): DomainReport | null {
   return hit.report;
 }
 
+const DOH_ENDPOINT = "https://cloudflare-dns.com/dns-query";
+const RR_TYPE: Record<string, number> = { A: 1, NS: 2, CNAME: 5, MX: 15, TXT: 16, AAAA: 28 };
+
+type DohAnswer = { name: string; type: number; data: string };
+
+/**
+ * DNS over HTTPS (Cloudflare 1.1.1.1 JSON API). Works identically on Node.js
+ * and on Cloudflare Workers, where node:dns resolvers are not available.
+ * Only the resolver is contacted, never the domain's own infrastructure.
+ */
+export async function dohQuery(name: string, type: keyof typeof RR_TYPE): Promise<{ status: number; answers: string[] }> {
+  const url = `${DOH_ENDPOINT}?name=${encodeURIComponent(name)}&type=${type}`;
+  const res = await fetch(url, {
+    headers: { accept: "application/dns-json" },
+    signal: AbortSignal.timeout(DNS_TIMEOUT_MS),
+    cache: "no-store",
+  });
+  if (!res.ok) throw Object.assign(new Error(`DoH HTTP ${res.status}`), { code: "EDOH" });
+  const json = (await res.json()) as { Status: number; Answer?: DohAnswer[] };
+  const answers = (json.Answer ?? []).filter((a) => a.type === RR_TYPE[type]).map((a) => a.data);
+  return { status: json.Status, answers };
+}
+
+const unquoteTxt = (txt: string) => txt.replace(/^"|"$/g, "").replace(/"\s+"/g, "");
+const stripDot = (v: string) => v.replace(/\.$/, "");
+
 async function resolveAll(domain: string): Promise<{ dns: DnsRecords; errors: string[] }> {
-  const resolver = new Resolver({ timeout: DNS_TIMEOUT_MS, tries: 2 });
   const errors: string[] = [];
-  const safe = async <T>(label: string, fn: () => Promise<T>, fallback: T): Promise<T> => {
+  const safe = async (label: string, name: string, type: keyof typeof RR_TYPE): Promise<string[]> => {
     try {
-      return await fn();
-    } catch (e) {
-      const code = (e as { code?: string }).code;
-      if (code !== "ENODATA" && code !== "ENOTFOUND") errors.push(`${label}: ${code ?? "errore"}`);
-      if (code === "ENOTFOUND" && label === "A") errors.push("Il dominio non esiste (NXDOMAIN).");
-      return fallback;
+      const { status, answers } = await dohQuery(name, type);
+      if (status === 3 && label === "A") errors.push("Il dominio non esiste (NXDOMAIN).");
+      else if (status !== 0 && status !== 3) errors.push(`${label}: errore DNS (rcode ${status})`);
+      return answers;
+    } catch {
+      errors.push(`${label}: risoluzione non riuscita`);
+      return [];
     }
   };
   const [A, AAAA, MX, NS, TXT, DMARC] = await Promise.all([
-    safe("A", () => resolver.resolve4(domain), [] as string[]),
-    safe("AAAA", () => resolver.resolve6(domain), [] as string[]),
-    safe("MX", async () => (await resolver.resolveMx(domain)).sort((a, b) => a.priority - b.priority).map((m) => `${m.priority} ${m.exchange}`), [] as string[]),
-    safe("NS", () => resolver.resolveNs(domain), [] as string[]),
-    safe("TXT", async () => (await resolver.resolveTxt(domain)).map((chunks) => chunks.join("")), [] as string[]),
-    safe("DMARC", async () => (await resolver.resolveTxt(`_dmarc.${domain}`)).map((chunks) => chunks.join("")), [] as string[]),
+    safe("A", domain, "A"),
+    safe("AAAA", domain, "AAAA"),
+    safe("MX", domain, "MX"),
+    safe("NS", domain, "NS"),
+    safe("TXT", domain, "TXT"),
+    safe("DMARC", `_dmarc.${domain}`, "TXT"),
   ]);
-  return { dns: { A, AAAA, MX, NS, TXT: TXT.slice(0, 30), DMARC }, errors };
+  const mx = MX.map((m) => {
+    const [prio, host] = m.split(/\s+/);
+    return { prio: Number(prio), text: `${prio} ${stripDot(host ?? "")}` };
+  })
+    .sort((a, b) => a.prio - b.prio)
+    .map((m) => m.text);
+  return {
+    dns: {
+      A,
+      AAAA,
+      MX: mx,
+      NS: NS.map(stripDot),
+      TXT: TXT.map(unquoteTxt).slice(0, 30),
+      DMARC: DMARC.map(unquoteTxt),
+    },
+    errors,
+  };
+}
+
+/** Public addresses of a host, resolved over DoH (used by the SSRF guard). */
+async function resolveHostAddresses(host: string): Promise<string[]> {
+  const [a, aaaa] = await Promise.all([dohQuery(host, "A"), dohQuery(host, "AAAA")]);
+  return [...a.answers, ...aaaa.answers];
 }
 
 /** HTTPS GET with redirect validation, timeout and size limit (SSRF-safe). */
@@ -53,8 +99,8 @@ async function safeFetchJson(startUrl: string): Promise<{ json: unknown; finalUr
       isAllowedOutboundUrl(url) ||
       (parsed.protocol === "https:" && /^rdap\.[a-z0-9.-]+$/i.test(parsed.hostname) && parsed.port === "" && !parsed.username);
     if (!allowed) throw new Error(`destinazione non consentita (${parsed.hostname})`);
-    const addresses = await lookup(parsed.hostname, { all: true });
-    if (!addresses.length || addresses.some((a) => isBlockedAddress(a.address))) {
+    const addresses = await resolveHostAddresses(parsed.hostname);
+    if (!addresses.length || addresses.some((a) => isBlockedAddress(a))) {
       throw new Error("la destinazione risolve su un indirizzo non pubblico");
     }
 

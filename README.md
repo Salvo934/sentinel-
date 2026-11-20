@@ -79,11 +79,25 @@ update public.profiles set role = 'administrator' where id = (select id from aut
 
 Serve solo per gestire il bucket `training-datasets`; per l'uso quotidiano basta essere admin della propria organizzazione.
 
+## Deploy su Cloudflare Workers
+
+Produzione: **https://sentinel-intelligence.salvo-bonavita9808.workers.dev** (OpenNext + Workers, flag `nodejs_compat` e `global_fetch_strictly_public`).
+
+```bash
+npx wrangler login     # una sola volta
+npm run deploy         # build OpenNext + deploy
+```
+
+Le variabili `NEXT_PUBLIC_SUPABASE_*` vengono incorporate al momento della build da `.env.local`. Le chiavi server-side facoltative (es. `VIRUSTOTAL_API_KEY`) vanno impostate come secret: `npx wrangler secret put VIRUSTOTAL_API_KEY`. In Supabase Auth la Site URL è l'URL di produzione e i Redirect URLs includono produzione e `localhost:3000`.
+
+Le interrogazioni DNS usano DNS-over-HTTPS (Cloudflare 1.1.1.1), compatibile sia con Node.js sia con Workers.
+
 ## Script
 
 | Comando | Descrizione |
 |---|---|
 | `npm run dev` / `build` / `start` | Sviluppo, build di produzione, avvio |
+| `npm run preview` / `deploy` | Anteprima locale nel runtime Workers / deploy su Cloudflare |
 | `npm run check` | Typecheck + lint + unit test |
 | `npm test` | Unit test (Vitest) |
 | `npm run db:test:local` | Migrazioni + test RLS su PostgreSQL locale temporaneo (senza Docker) |
