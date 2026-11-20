@@ -41,6 +41,14 @@ Registra risultati con fonte, URL, data e ora di raccolta, metodo di acquisizion
 ## Threat Intelligence
 Inserisci un indicatore: il tipo è rilevato automaticamente e il formato validato (accetta valori defanged). Assegna verdetto, confidenza, TLP, fonte, caso e note. I risultati di reputazione (in questa versione solo simulati nei dati demo) sono mostrati separatamente dal verdetto. Le integrazioni VirusTotal/OTX/NVD/MITRE sono pianificate per la Fase 2.
 
+## MITRE ATT&CK
+- **Matrice**: le colonne sono le tattiche (il *perché*), le celle le tecniche (il *come*). Cerca per ID o nome, attiva *Cerca nelle descrizioni* per una ricerca a testo pieno, filtra per piattaforma. Le celle colorate sono tecniche mappate sui tuoi casi (1, 2, 3+).
+- **Tattiche spiegate**: guida in italiano con obiettivo, esempi e cosa fa l'analista per ciascuna delle 15 tattiche.
+- **Scheda tecnica**: fase dell'attacco, descrizione MITRE, sotto-tecniche, mitigazioni, come rilevarla, gruppi che la usano e casi in cui l'hai mappata; da qui puoi mapparla su un caso.
+- **Nel caso**: scheda *ATT&CK* → mappa una tecnica (ID o nome), con stato (predefinito: ipotesi), confidenza, evidenza e osservazione.
+- **Suggerimenti**: Phishing Lab e Domain Analysis propongono tecniche con il motivo; nell'analisi phishing salvata e collegata a un caso puoi mapparle con un clic.
+- I gruppi aiutano a capire come opera un attore; **non** usarli per attribuire automaticamente un caso.
+
 ## Domain Analysis
 Inserisci un dominio (anche un URL: viene estratto l'host). Il backend raccoglie **record A, AAAA, MX, NS, TXT, DMARC** e i **dati RDAP**, produce osservazioni automatiche (SPF permissivo, DMARC assente, registrazione recente, name server di parcheggio…) e mostra i collegamenti con casi esistenti.
 - I domini riservati (`example.com`, `*.example`, `*.test`) restituiscono **dati simulati** etichettati.

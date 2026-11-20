@@ -1,6 +1,8 @@
 import { AlertTriangle, Info, Paperclip, ShieldAlert } from "lucide-react";
 
 import { ToneBadge } from "@/components/common/tone-badge";
+import { AttackSuggestions } from "@/features/attack/components/suggestions";
+import { suggestFromEmail } from "@/features/attack/suggest";
 import type { Tone } from "@/lib/domain";
 
 import type { AuthResult, ParsedEmail, Severity } from "../parser";
@@ -17,7 +19,7 @@ const authTone = (v: AuthResult): Tone => (v === "pass" ? "success" : v === "fai
 type Summary = Omit<ParsedEmail, "headers" | "body"> & { body?: string };
 
 /** Read-only rendering of an analysis. Everything is plain text: no HTML is rendered, no link is clickable. */
-export function AnalysisView({ analysis }: { analysis: Summary }) {
+export function AnalysisView({ analysis, showAttack = true }: { analysis: Summary; showAttack?: boolean }) {
   const rows: [string, string | null][] = [
     ["Mittente (From)", [analysis.from.display, analysis.from.address && `<${analysis.from.address}>`].filter(Boolean).join(" ") || null],
     ["Reply-To", analysis.replyTo?.address ?? null],
@@ -77,6 +79,8 @@ export function AnalysisView({ analysis }: { analysis: Summary }) {
           </ul>
         )}
       </section>
+
+      {showAttack ? <AttackSuggestions suggestions={suggestFromEmail(analysis)} /> : null}
 
       <section>
         <h3 className="mb-2 text-sm font-semibold">URL estratti (testo inattivo, defanged)</h3>

@@ -1,5 +1,6 @@
 import {
   Bot,
+  Crosshair,
   FileText,
   FolderKanban,
   FolderLock,
@@ -38,6 +39,7 @@ export const NAV_SECTIONS: NavSection[] = [
     items: [
       { href: "/osint", label: "OSINT Workspace", icon: ScanSearch },
       { href: "/threat-intel", label: "Threat Intelligence", icon: Radar },
+      { href: "/attack", label: "MITRE ATT&CK", icon: Crosshair },
       { href: "/domains", label: "Domain Analysis", icon: Globe },
       { href: "/phishing", label: "Phishing Lab", icon: MailWarning },
       { href: "/graph", label: "Investigation Graph", icon: Network, planned: "Fase 3" },

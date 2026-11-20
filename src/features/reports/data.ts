@@ -44,7 +44,7 @@ export async function getReportBundle(reportId: string): Promise<ReportBundle | 
   if (!report) return null;
   const caseId = report.case_id as string;
 
-  const [caseRes, evidenceRes, findingsRes, iocRes, eventsRes, versionsRes, authorRes, phishingRes, domainRes] = await Promise.all([
+  const [caseRes, evidenceRes, findingsRes, iocRes, eventsRes, versionsRes, authorRes, phishingRes, domainRes, attackRes] = await Promise.all([
     supabase.from("cases").select("id, case_ref, title, category, objective, organization_id, status, risk_level").eq("id", caseId).single(),
     supabase.from("evidence").select("title, evidence_type, source, collected_at, sha256_hash, reliability, verification_status").eq("case_id", caseId).order("collected_at"),
     supabase.from("osint_findings").select("title, source_name, source_url, collected_at, acquisition_method, reliability, info_status").eq("case_id", caseId).order("collected_at"),
@@ -54,6 +54,11 @@ export async function getReportBundle(reportId: string): Promise<ReportBundle | 
     report.created_by ? supabase.from("profiles").select("full_name").eq("id", report.created_by).maybeSingle() : Promise.resolve({ data: null }),
     supabase.from("phishing_analyses").select("title, verdict, confidence, created_at").eq("case_id", caseId),
     supabase.from("domain_analyses").select("domain, data_mode, risk_level, created_at").eq("case_id", caseId),
+    supabase
+      .from("case_attack_techniques")
+      .select("technique_id, info_status, confidence, observation, attack_techniques(name, tactics)")
+      .eq("case_id", caseId)
+      .order("technique_id"),
   ]);
   if (!caseRes.data) return null;
 
@@ -117,6 +122,24 @@ export async function getReportBundle(reportId: string): Promise<ReportBundle | 
       ]),
     },
   ];
+  if ((attackRes.data ?? []).length) {
+    annexes.push({
+      heading: "Tecniche MITRE ATT&CK",
+      head: ["ID", "Tecnica", "Tattiche", "Stato", "Confidenza", "Osservazione"],
+      rows: attackRes.data!.map((m) => {
+        const t = m.attack_techniques as unknown as { name: string; tactics: string[] } | null;
+        return [
+          m.technique_id,
+          t?.name ?? "—",
+          (t?.tactics ?? []).join(", "),
+          INFO_STATUSES[m.info_status as keyof typeof INFO_STATUSES],
+          CONFIDENCE[m.confidence as keyof typeof CONFIDENCE],
+          m.observation ?? "—",
+        ];
+      }),
+      note: "Classificazione secondo MITRE ATT&CK® Enterprise. © The MITRE Corporation, riprodotto con autorizzazione.",
+    });
+  }
   if ((phishingRes.data ?? []).length) {
     annexes.push({
       heading: "Analisi phishing collegate",

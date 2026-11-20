@@ -2,6 +2,8 @@ import { AlertTriangle, FlaskConical } from "lucide-react";
 import Link from "next/link";
 
 import { ToneBadge } from "@/components/common/tone-badge";
+import { AttackSuggestions } from "@/features/attack/components/suggestions";
+import { suggestFromDomain } from "@/features/attack/suggest";
 import { formatDate, formatDateTime } from "@/lib/format";
 
 import type { LinkedCase } from "../actions";
@@ -93,6 +95,8 @@ export function DomainReportView({ report, linkedCases }: { report: DomainReport
           </ul>
         )}
       </section>
+
+      <AttackSuggestions suggestions={suggestFromDomain(report)} />
 
       {linkedCases ? (
         <section>

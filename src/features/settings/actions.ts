@@ -60,6 +60,9 @@ export async function seedDemoAction(): Promise<ActionResult<unknown>> {
   const supabase = await createClient();
   const { error } = await supabase.rpc("seed_demo_data", { p_org: active.organizationId });
   if (error) return error.code === "23505" ? fail("I dati demo sono già caricati.") : dbFail(error, "seed demo");
+  // ATT&CK mappings for the demo cases (no-op if the ATT&CK dataset is not loaded).
+  const { error: attackError } = await supabase.rpc("seed_demo_attack", { p_org: active.organizationId });
+  if (attackError) console.error("[db] seed demo attack:", attackError.code);
   revalidatePath("/", "layout");
   return ok();
 }

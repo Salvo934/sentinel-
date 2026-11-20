@@ -17,6 +17,7 @@ import { EmptyState } from "@/components/common/empty-state";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getAttackUsage } from "@/features/attack/data";
 import { ActivityArea, HorizontalBars } from "@/features/dashboard/charts";
 import { StatCard } from "@/features/dashboard/stat-card";
 import { describeAction } from "@/lib/audit-labels";
@@ -50,7 +51,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
   const supabase = await createClient();
   const org = active.organizationId;
 
-  const [statsRes, auditRes, tasksRes, scenariosRes, attemptsRes] = await Promise.all([
+  const [statsRes, auditRes, tasksRes, scenariosRes, attemptsRes, attackUsage] = await Promise.all([
     supabase.rpc("dashboard_stats", { p_org: org, p_include_demo: includeDemo }),
     supabase
       .from("audit_logs")
@@ -67,7 +68,16 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
       .limit(6),
     supabase.from("training_scenarios").select("id, slug, title, difficulty, estimated_minutes").order("sort_order"),
     supabase.from("training_attempts").select("scenario_id, status, score, max_score").eq("user_id", user.id),
+    getAttackUsage(org, includeDemo),
   ]);
+  const topTechniqueIds = [...attackUsage.entries()].sort((a, b) => b[1].cases - a[1].cases).slice(0, 8);
+  const { data: topTechniqueNames } = topTechniqueIds.length
+    ? await supabase.from("attack_techniques").select("id, name").in("id", topTechniqueIds.map(([id]) => id))
+    : { data: [] as { id: string; name: string }[] };
+  const topTechniques = topTechniqueIds.map(([id, u]) => ({
+    label: `${id} ${topTechniqueNames?.find((t) => t.id === id)?.name ?? ""}`.trim(),
+    value: u.cases,
+  }));
 
   if (statsRes.error) {
     return (
@@ -176,6 +186,23 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
           </Card>
         </div>
       </section>
+
+      {topTechniques.length ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Tecniche MITRE ATT&amp;CK più osservate</CardTitle>
+            <CardDescription>
+              Numero di casi su cui ogni tecnica è mappata ·{" "}
+              <Link href="/attack?observed=1" className="underline">
+                apri la matrice
+              </Link>
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <HorizontalBars data={topTechniques} unit="casi" color="var(--chart-4)" />
+          </CardContent>
+        </Card>
+      ) : null}
 
       <section className="grid gap-4 xl:grid-cols-3">
         <Card className="xl:col-span-2">

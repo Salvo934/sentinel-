@@ -32,6 +32,11 @@ for f in "$ROOT"/supabase/migrations/*.sql; do
   "${PSQL[@]}" -f "$f"
 done
 
+if [ -f "$ROOT/public/data/mitre-attack-enterprise.json" ]; then
+  echo "▸ Loading MITRE ATT&CK dataset"
+  { printf 'create temp table _attack(doc text);\ncopy _attack(doc) from stdin;\n'; python3 -I -c 'import sys,json; d=open(sys.argv[1],encoding="utf-8").read(); print(d.replace("\\","\\\\").replace("\t","\\t").replace("\n","\\n").replace("\r","\\r"))' "$ROOT/public/data/mitre-attack-enterprise.json"; printf '\\.\nselect public.load_attack_bundle(doc::jsonb) from _attack;\n'; } | "${PSQL[@]}" -t -A
+fi
+
 echo "▸ Running tests"
 status=0
 for f in "$ROOT"/supabase/tests/*.sql; do

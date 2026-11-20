@@ -13,6 +13,7 @@ const PROTECTED_PREFIXES = [
   "/investigations",
   "/osint",
   "/threat-intel",
+  "/attack",
   "/domains",
   "/phishing",
   "/graph",

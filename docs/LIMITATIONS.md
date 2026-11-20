@@ -9,12 +9,13 @@
 ## Funzioni pianificate (non presenti)
 | Fase | Funzione |
 |---|---|
-| 2 | Integrazioni VirusTotal, AlienVault OTX, NVD (CVE), MITRE ATT&CK; metadati TLS via Certificate Transparency; Report CTI dedicato con IOC arricchiti |
+| 2 | Integrazioni VirusTotal, AlienVault OTX, NVD (CVE); ATT&CK: software/malware, campagne e matrici Mobile/ICS (Enterprise già integrato); metadati TLS via Certificate Transparency; Report CTI dedicato con IOC arricchiti |
 | 3 | Investigation Graph con React Flow (tabelle `investigation_entities` / `entity_relationships` già pronte), esportazione grafi, filtri investigativi avanzati |
 | 4 | Risk Assessment con matrice 5×5 configurabile e report di rischio (tabella `risk_assessments` già pronta); esercitazioni 4 (CTI) e 5 (Risk Assessment) |
 | 5 | AI Investigation Assistant (disattivabile, solo lato server) |
 
 ## Limiti noti dell'MVP
+- **MITRE ATT&CK**: descrizioni tecniche in inglese (originale MITRE); aggiornamento del dataset manuale (docs/ATTACK.md); i suggerimenti si basano su regole semplici e vanno sempre verificati.
 - **Report**: PDF generati nel browser con font standard (caratteri fuori da Windows-1252 sostituiti); impaginazione semplice.
 - **Domain Analysis**: dominio registrabile calcolato senza la Public Suffix List completa; cache per istanza server (non condivisa); il controllo SSRF verifica l'IP prima della richiesta ma una finestra di DNS rebinding resta teoricamente possibile (mitigata da allow-list/`rdap.*` e solo HTTPS); i server RDAP fuori allow-list sono ammessi solo se il nome inizia con `rdap.`.
 - **Phishing Lab**: parser semplificato (nessuna decodifica MIME/base64/quoted-printable, nessuna verifica crittografica DKIM: si leggono i risultati scritti dal server ricevente).

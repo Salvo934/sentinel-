@@ -27,7 +27,6 @@ const INTEGRATIONS = [
   { name: "VirusTotal", env: "VIRUSTOTAL_API_KEY", note: "Reputazione di IP, domini, URL e hash" },
   { name: "AlienVault OTX", env: "OTX_API_KEY", note: "Pulse e indicatori della community" },
   { name: "NVD (CVE)", env: "NVD_API_KEY", note: "Vulnerabilità CVE (chiave facoltativa)" },
-  { name: "MITRE ATT&CK", env: null, note: "Tecniche e tattiche (dataset STIX pubblico)" },
 ] as const;
 
 type ResultRow = { id: string; indicator_id: string; provider: string; data_mode: string; result: Record<string, unknown>; checked_at: string };

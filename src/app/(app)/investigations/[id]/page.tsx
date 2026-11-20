@@ -1,4 +1,4 @@
-import { CalendarClock, FilePlus2, FileText, FolderLock, History, ListTodo, Plus, Radar, ScanSearch } from "lucide-react";
+import { CalendarClock, Crosshair, FilePlus2, FileText, FolderLock, History, ListTodo, Plus, Radar, ScanSearch } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -19,6 +19,11 @@ import { FormField, SelectInput, TextInput } from "@/components/forms/fields";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { updateMappingAction } from "@/features/attack/actions";
+import { MapTechniqueForm } from "@/features/attack/components/map-technique-form";
+import { DeleteMappingButton } from "@/features/attack/components/mapping-controls";
+import { getTactics, getTechniqueIndex, techniqueOptions } from "@/features/attack/data";
+import { TACTIC_GUIDE } from "@/features/attack/guide";
 import { createEventAction, createTaskAction, updateCaseAction, updateEventAction } from "@/features/cases/actions";
 import { CaseForm } from "@/features/cases/components/case-form";
 import { CaseStatusControls, DeleteEventButton, DeleteTaskButton, TaskStatusSelect } from "@/features/cases/components/case-controls";
@@ -35,7 +40,9 @@ import {
   TASK_STATUSES,
   options,
   type Classification,
+  type Confidence,
   type EventCategory,
+  type InfoStatus,
   type ReportType,
 } from "@/lib/domain";
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -53,6 +60,7 @@ const TABS = [
   { key: "evidence", label: "Evidenze", icon: FolderLock },
   { key: "timeline", label: "Timeline", icon: CalendarClock },
   { key: "intel", label: "OSINT e IOC", icon: Radar },
+  { key: "attack", label: "ATT&CK", icon: Crosshair },
   { key: "reports", label: "Report", icon: FileText },
   { key: "history", label: "Cronologia", icon: History },
 ] as const;
@@ -76,7 +84,7 @@ export default async function CaseDetailPage({ params, searchParams }: PageProps
   const writable =
     c.status !== "archived" && (myRole === "admin" || myRole === "analyst" || (myRole === "trainee" && c.created_by === user.id));
 
-  const [tasksRes, evidenceRes, eventsRes, findingsRes, iocRes, reportsRes, historyRes] = await Promise.all([
+  const [tasksRes, evidenceRes, eventsRes, findingsRes, iocRes, reportsRes, historyRes, attackRes] = await Promise.all([
     supabase.from("case_tasks").select("*").eq("case_id", id).order("created_at"),
     supabase.from("evidence").select("*").eq("case_id", id).order("collected_at", { ascending: false }),
     supabase.from("investigation_events").select("*").eq("case_id", id).order("event_at"),
@@ -86,7 +94,13 @@ export default async function CaseDetailPage({ params, searchParams }: PageProps
     tab === "history"
       ? supabase.from("audit_logs").select("id, action, metadata, user_id, created_at").eq("case_id", id).order("created_at", { ascending: false }).limit(200)
       : Promise.resolve({ data: [] as { id: number; action: string; metadata: unknown; user_id: string | null; created_at: string }[] }),
+    supabase
+      .from("case_attack_techniques")
+      .select("id, technique_id, info_status, confidence, observation, evidence_id, source, attack_techniques(name, tactics, parent_id)")
+      .eq("case_id", id)
+      .order("technique_id"),
   ]);
+  const attackMappings = (attackRes.data ?? []) as unknown as AttackMappingRow[];
   const tasks = (tasksRes.data ?? []) as TaskRow[];
   const evidence = (evidenceRes.data ?? []) as EvidenceRow[];
   const events = (eventsRes.data ?? []) as EventRow[];
@@ -101,6 +115,7 @@ export default async function CaseDetailPage({ params, searchParams }: PageProps
     timeline: events.length,
     intel: findings.length + iocs.length,
     reports: reports.length,
+    attack: attackMappings.length,
   };
 
   return (
@@ -372,6 +387,10 @@ export default async function CaseDetailPage({ params, searchParams }: PageProps
         </div>
       ) : null}
 
+      {tab === "attack" ? (
+        <AttackTab caseId={id} mappings={attackMappings} writable={writable} evidenceOptions={evidenceOptions} />
+      ) : null}
+
       {tab === "reports" ? (
         <Card>
           <CardHeader className="flex flex-row items-start justify-between gap-3">
@@ -544,6 +563,109 @@ function TimelineTab({
           </CardHeader>
           <CardContent>
             <EventForm action={createEventAction.bind(null, caseId)} evidenceOptions={evidenceOptions} submitLabel="Aggiungi alla timeline" />
+          </CardContent>
+        </Card>
+      ) : null}
+    </div>
+  );
+}
+
+type AttackMappingRow = {
+  id: string;
+  technique_id: string;
+  info_status: InfoStatus;
+  confidence: Confidence;
+  observation: string | null;
+  evidence_id: string | null;
+  source: string | null;
+  attack_techniques: { name: string; tactics: string[]; parent_id: string | null } | null;
+};
+
+async function AttackTab({
+  caseId,
+  mappings,
+  writable,
+  evidenceOptions,
+}: {
+  caseId: string;
+  mappings: AttackMappingRow[];
+  writable: boolean;
+  evidenceOptions: (readonly [string, string])[];
+}) {
+  const [tactics, index] = await Promise.all([getTactics(), writable ? getTechniqueIndex() : Promise.resolve([])]);
+  return (
+    <div className="grid gap-4 xl:grid-cols-[3fr_2fr]">
+      <Card>
+        <CardHeader>
+          <CardTitle>Tecniche MITRE ATT&amp;CK del caso</CardTitle>
+          <CardDescription>
+            Ordinate lungo le fasi dell&apos;attacco. Una tecnica è un fatto solo se un&apos;evidenza la supporta; altrimenti resta un&apos;ipotesi.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {mappings.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Nessuna tecnica mappata. Usa il modulo a lato, le pagine di <Link href="/attack" className="underline">MITRE ATT&amp;CK</Link> o i
+              suggerimenti del Phishing Lab.
+            </p>
+          ) : (
+            <ol className="space-y-4">
+              {tactics.map((tac) => {
+                const list = mappings.filter((m) => m.attack_techniques?.tactics.includes(tac.shortname));
+                if (!list.length) return null;
+                return (
+                  <li key={tac.id}>
+                    <p className="mb-1.5 text-xs font-semibold tracking-wide text-teal uppercase">
+                      {TACTIC_GUIDE[tac.shortname]?.title ?? tac.name} · {tac.name}
+                    </p>
+                    <ul className="space-y-2">
+                      {list.map((m) => (
+                        <li key={`${tac.id}-${m.id}`} className="rounded-lg border p-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <Link href={`/attack/${m.technique_id}`} className="text-sm font-medium hover:underline">
+                              <span className="font-mono text-xs text-muted-foreground">{m.technique_id}</span> {m.attack_techniques?.name}
+                            </Link>
+                            {writable ? <DeleteMappingButton mappingId={m.id} caseId={caseId} /> : null}
+                          </div>
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            <InfoStatusBadge value={m.info_status} />
+                            <ToneBadge tone={m.confidence === "high" ? "success" : m.confidence === "moderate" ? "info" : "neutral"}>
+                              Confidenza {m.confidence === "high" ? "alta" : m.confidence === "moderate" ? "moderata" : "bassa"}
+                            </ToneBadge>
+                            {m.source && m.source !== "manual" ? <ToneBadge tone="neutral">da {m.source.replace("_", " ")}</ToneBadge> : null}
+                          </div>
+                          {m.observation ? <p className="mt-1 text-xs text-muted-foreground">{m.observation}</p> : null}
+                          {writable ? (
+                            <details className="mt-2">
+                              <summary className="cursor-pointer text-xs text-primary">Aggiorna valutazione</summary>
+                              <ActionForm action={updateMappingAction.bind(null, m.id, caseId)} successMessage="Valutazione aggiornata" className="mt-2 grid gap-2 sm:grid-cols-2">
+                                <SelectInput id={`ms-${m.id}-${tac.id}`} name="info_status" options={options.infoStatuses} defaultValue={m.info_status} />
+                                <SelectInput id={`mc-${m.id}-${tac.id}`} name="confidence" options={options.confidence} defaultValue={m.confidence} />
+                                <SelectInput id={`me-${m.id}-${tac.id}`} name="evidence_id" options={evidenceOptions} defaultValue={m.evidence_id} placeholder="— Nessuna evidenza —" className="sm:col-span-2" />
+                                <TextInput id={`mo-${m.id}-${tac.id}`} name="observation" defaultValue={m.observation ?? ""} placeholder="Osservazione" className="sm:col-span-2" />
+                                <SubmitButton size="sm" variant="outline">
+                                  Salva
+                                </SubmitButton>
+                              </ActionForm>
+                            </details>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+        </CardContent>
+      </Card>
+      {writable ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Mappa una tecnica</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <MapTechniqueForm caseId={caseId} techniqueOptions={techniqueOptions(index)} evidenceOptions={evidenceOptions} />
           </CardContent>
         </Card>
       ) : null}

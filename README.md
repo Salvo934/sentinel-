@@ -7,6 +7,7 @@ Questa è la **Fase 1 (MVP)**: Next.js 16 + Supabase (PostgreSQL, Auth, Storage,
 |---|---|
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Architettura, schema dati, RLS, storage, scelte di sicurezza |
 | [docs/USER_MANUAL.md](docs/USER_MANUAL.md) | Manuale utente modulo per modulo |
+| [docs/ATTACK.md](docs/ATTACK.md) | Modulo MITRE ATT&CK: funzioni, dati, aggiornamento |
 | [docs/TESTING.md](docs/TESTING.md) | Test automatici ed esito |
 | [docs/LIMITATIONS.md](docs/LIMITATIONS.md) | Limiti, funzioni pianificate, verifiche manuali richieste |
 
@@ -18,6 +19,7 @@ Questa è la **Fase 1 (MVP)**: Next.js 16 + Supabase (PostgreSQL, Auth, Storage,
 - **Investigations** (case management): CRUD, stato, attività, timeline (data evento ≠ data di acquisizione), evidenze, report, cronologia da audit log, archiviazione ed eliminazione controllata.
 - **Evidence Library**: bucket privato, hash SHA-256 calcolato dal server, verifica di integrità, download con signed URL di 60 s.
 - **OSINT Workspace**: risultati con fonte, URL, data, metodo, affidabilità (scala Admiralty), stato dell'informazione, limitazioni; registro fonti.
+- **MITRE ATT&CK** (Enterprise 20.1): matrice con heatmap dei casi, guida italiana alle tattiche, schede tecnica con mitigazioni e rilevamento, gruppi di minaccia, mappatura sui casi e suggerimenti da Phishing Lab e Domain Analysis.
 - **Threat Intelligence**: registro IOC (IPv4, IPv6, domini, URL, SHA-256, SHA-1, MD5) con validazione, verdetto e confidenza dell'analista separati dalla reputazione delle fonti.
 - **Domain Analysis**: DNS e RDAP reali raccolti passivamente dal backend (protezioni SSRF, rate limiting, cache), dati simulati per domini riservati, confronto di due domini, cronologia, PDF.
 - **Phishing Lab**: analisi statica di header/SPF/DKIM/DMARC, URL inattivi, allegati non aperti, 6 email simulate in modalità training.

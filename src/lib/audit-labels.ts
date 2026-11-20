@@ -12,6 +12,7 @@ const ENTITY: Record<string, string> = {
   organization: "Organizzazione",
   organization_member: "Membro",
   training: "Esercitazione",
+  attack_mapping: "Tecnica ATT&CK",
 };
 const VERB: Record<string, string> = {
   created: "creato",

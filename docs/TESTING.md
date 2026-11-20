@@ -9,6 +9,7 @@ Applica tutte le migrazioni su un cluster PostgreSQL temporaneo (con uno shim di
 ```
 ✔ 01_tenancy_rls_roles.sql (30 assertions)
 ✔ 02_evidence_reports_training_storage.sql (28 assertions)
+✔ 03_attack.sql (13 assertions)
 ```
 
 Coperti: isolamento tra organizzazioni; creazione profilo/organizzazione alla registrazione; impossibilità di auto-assegnarsi ruoli o membership; trainee in sola lettura sui casi altrui ma attivi sui propri; analyst senza permessi di eliminazione; eliminazione solo di casi archiviati e solo da admin; casi archiviati in sola lettura; audit log non cancellabile, visibile per ruolo e alimentato dai trigger; `log_activity` e demo vincolati all'organizzazione; anon senza accesso; hash evidenze write-once e obbligatorio con file; coerenza caso/organizzazione degli IOC; report creati come bozza, finali immutabili, versionamento; chiavi di correzione non leggibili, soluzione bloccata prima della consegna, punteggio non scrivibile dall'utente, tentativi consegnati congelati; policy Storage su cartelle di altre organizzazioni e di altri utenti.
@@ -18,8 +19,8 @@ Con Docker si possono eseguire gli stessi file con il runner ufficiale: `npm run
 ## 2. Unit test — `npm test`
 
 ```
-Test Files  12 passed (12)
-     Tests  103 passed (103)
+Test Files  13 passed (13)
+     Tests  111 passed (111)
 ```
 
 Coperti: validazione/rilevamento/normalizzazione IOC e defang; guardia SSRF (IP privati, IPv6 locali, allow-list, credenziali, porte); parser email sui campioni formativi (SPF/DKIM/DMARC, Reply-To, Return-Path, link ingannevoli, IP, shortener, allegati a doppia estensione, BEC, header ripiegati); normalizzazione domini, anomalie DNS/RDAP, dati simulati; controlli upload (estensioni, magic bytes, dimensioni, nomi file); schemi Zod; fuso orario Europe/Rome; helper training (risposte ammesse, autovalutazione); builder PDF; integrità dei dataset formativi (risposte coerenti, pesi = 100, nessuna fuga delle soluzioni, solo domini/IP riservati); redirect sicuri e classificazione delle rotte.

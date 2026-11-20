@@ -9,6 +9,9 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCaseOptions } from "@/features/cases/data";
 import { updatePhishingAssessmentAction } from "@/features/phishing/actions";
+import { AttackSuggestions } from "@/features/attack/components/suggestions";
+import { MapTechniqueForm } from "@/features/attack/components/map-technique-form";
+import { suggestFromEmail } from "@/features/attack/suggest";
 import { AnalysisView } from "@/features/phishing/components/analysis-view";
 import { analyzeEmail } from "@/features/phishing/parser";
 import { options, type Verdict } from "@/lib/domain";
@@ -52,7 +55,7 @@ export default async function PhishingDetailPage({ params }: PageProps<"/phishin
             <CardTitle>Risultati</CardTitle>
           </CardHeader>
           <CardContent>
-            <AnalysisView analysis={analysis} />
+            <AnalysisView analysis={analysis} showAttack={false} />
           </CardContent>
         </Card>
         <div className="space-y-4">
@@ -76,6 +79,36 @@ export default async function PhishingDetailPage({ params }: PageProps<"/phishin
                 </FormField>
                 <SubmitButton size="sm">Salva</SubmitButton>
               </ActionForm>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>MITRE ATT&amp;CK</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <AttackSuggestions
+                suggestions={suggestFromEmail(analysis)}
+                renderAction={
+                  a.case_id
+                    ? (sug) => (
+                        <details>
+                          <summary className="cursor-pointer text-xs text-primary">Mappa sul caso collegato</summary>
+                          <div className="mt-2">
+                            <MapTechniqueForm
+                              caseId={a.case_id as string}
+                              techniqueId={sug.techniqueId}
+                              source="phishing_lab"
+                              defaultObservation={`${sug.reason} (analisi phishing: ${a.title as string})`}
+                              idPrefix={`ph-${sug.techniqueId}`}
+                              compact
+                            />
+                          </div>
+                        </details>
+                      )
+                    : undefined
+                }
+              />
+              {!a.case_id ? <p className="mt-2 text-xs text-muted-foreground">Collega l&apos;analisi a un caso per mappare le tecniche.</p> : null}
             </CardContent>
           </Card>
           <Card>
