@@ -1,0 +1,133 @@
+{
+  "slug": "phishing-email-investigation",
+  "sort_order": 3,
+  "title": "Phishing Email Investigation — falso corriere SpediRapido",
+  "description": "Analisi degli header e del contenuto di un'email fittizia di falso corriere: autenticazione, indicatori sospetti, evidenze e rapporto.",
+  "difficulty": "beginner",
+  "category": "phishing_investigation",
+  "estimated_minutes": 45,
+  "skills": ["Header email", "SPF/DKIM/DMARC", "Estrazione IOC", "Gestione allegati sospetti", "Reporting"],
+  "content": {
+    "scenario": "Un dipendente dell'organizzazione simulata ha segnalato un'email che chiede il pagamento di 1,99 EUR per sbloccare una spedizione. Il messaggio è fittizio e sanitizzato: domini .example, indirizzi IP di documentazione.",
+    "briefing": {
+      "from": "Responsabile SOC (fittizio)",
+      "text": "Analizza il messaggio, decidi se è phishing e prepara un breve rapporto con gli indicatori da bloccare. Non aprire allegati e non cliccare link: i link sono riportati come testo inattivo."
+    },
+    "objective": "Determinare la natura del messaggio sulla base di evidenze tecniche e di contenuto, estrarre gli indicatori e documentare la valutazione.",
+    "sample_key": "fake-courier",
+    "documents": [
+      {
+        "id": "doc-eml",
+        "title": "Messaggio segnalato (header e corpo, sanitizzato)",
+        "kind": "email",
+        "source": "Segnalazione interna (simulata)",
+        "body": "Received: from mail.spedirapido-tracking.example (unknown [198.51.100.77])\n\tby mx.organizzazione.example with ESMTP id 4F2A1; Tue, 17 Nov 2026 08:14:03 +0100\nAuthentication-Results: mx.organizzazione.example;\n\tspf=softfail (domain of transitioning bounce@bulkmail-sender.example does not designate 198.51.100.77 as permitted sender) smtp.mailfrom=bounce@bulkmail-sender.example;\n\tdkim=fail header.d=bulkmail-sender.example;\n\tdmarc=fail (p=none) header.from=spedirapido.example\nFrom: \"SpediRapido Notifiche\" <notifiche@spedirapido.example>\nReply-To: assistenza@spedirapido-supporto.example\nReturn-Path: <bounce@bulkmail-sender.example>\nTo: dipendente@organizzazione.example\nSubject: Il tuo pacco è in giacenza - azione richiesta entro 24 ore\nDate: Tue, 17 Nov 2026 08:13:58 +0100\nMessage-ID: <8812.ab@bulkmail-sender.example>\nContent-Type: multipart/mixed\n\nGentile cliente,\nil tuo pacco non può essere consegnato per mancato pagamento delle spese di sdoganamento (1,99 EUR).\nPaga ora entro 24 ore per evitare la restituzione al mittente:\n<a href=\"http://spedirapido.tracking-update.example/pay?id=7781\">https://www.spedirapido.example/traccia</a>\n\nAllegato: Ricevuta_Spedizione.pdf.html"
+      }
+    ],
+    "tasks": [
+      "Esamina gli header: mittente, Reply-To, Return-Path, Received.",
+      "Interpreta i risultati SPF, DKIM e DMARC.",
+      "Estrai URL e domini come testo inattivo.",
+      "Valuta l'allegato senza aprirlo.",
+      "Formula un verdetto motivato e un rapporto con gli indicatori."
+    ],
+    "tools": ["Phishing Lab", "Threat Intelligence (registro IOC)", "Report Generator"],
+    "instructions": [
+      "Puoi caricare lo stesso messaggio nel Phishing Lab con il campione \"Falso corriere\" per l'analisi automatica degli header.",
+      "L'analisi automatica è un supporto: il verdetto finale è dell'analista.",
+      "Riporta gli URL in forma defanged (hxxp, [.])."
+    ],
+    "deliverable": {
+      "title": "Phishing Investigation Report",
+      "sections": ["Sintesi e verdetto", "Header e autenticazione", "Indicatori estratti", "Allegato", "Azioni raccomandate", "Limitazioni"]
+    },
+    "questions": [
+      {
+        "id": "q1",
+        "type": "multi",
+        "prompt": "Quali risultati di autenticazione sono negativi? (seleziona tutti quelli corretti)",
+        "options": [
+          { "value": "spf", "label": "SPF (softfail)" },
+          { "value": "dkim", "label": "DKIM (fail)" },
+          { "value": "dmarc", "label": "DMARC (fail)" },
+          { "value": "tls", "label": "TLS (fail)" }
+        ]
+      },
+      {
+        "id": "q2",
+        "type": "single",
+        "prompt": "Quale elemento identifica in modo più affidabile il server che ha consegnato il messaggio?",
+        "options": [
+          { "value": "a", "label": "L'indirizzo nel campo From" },
+          { "value": "b", "label": "L'header Received aggiunto dal nostro server MX, che registra l'IP che si è connesso" },
+          { "value": "c", "label": "Il Message-ID" },
+          { "value": "d", "label": "Il nome visualizzato del mittente" }
+        ]
+      },
+      {
+        "id": "q3",
+        "type": "single",
+        "prompt": "Il testo del link mostra www.spedirapido.example ma la destinazione reale è diversa. Qual è la destinazione reale?",
+        "options": [
+          { "value": "a", "label": "www.spedirapido.example" },
+          { "value": "b", "label": "spedirapido.tracking-update.example" },
+          { "value": "c", "label": "bulkmail-sender.example" },
+          { "value": "d", "label": "organizzazione.example" }
+        ]
+      },
+      {
+        "id": "q4",
+        "type": "single",
+        "prompt": "Come gestisci l'allegato \"Ricevuta_Spedizione.pdf.html\"?",
+        "options": [
+          { "value": "a", "label": "Lo apro per verificare se è davvero una ricevuta" },
+          { "value": "b", "label": "Non lo apro: doppia estensione, file HTML che può contenere un form di phishing; ne documento nome e hash e, se previsto dalle procedure, lo analizzo in ambiente isolato" },
+          { "value": "c", "label": "Lo inoltro ai colleghi per un parere" },
+          { "value": "d", "label": "Lo rinomino in .pdf e lo apro" }
+        ]
+      },
+      {
+        "id": "q5",
+        "type": "keywords",
+        "prompt": "Scrivi la sintesi del verdetto (3–5 righe) citando le evidenze principali.",
+        "placeholder": "Verdetto, evidenze tecniche, evidenze di contenuto..."
+      }
+    ]
+  },
+  "grading_rubric": [
+    { "id": "headers", "criterion": "Analisi header", "description": "From, Reply-To, Return-Path e Received interpretati correttamente.", "weight": 25 },
+    { "id": "auth", "criterion": "Autenticazione", "description": "SPF, DKIM e DMARC interpretati e collegati al dominio del mittente.", "weight": 20 },
+    { "id": "ioc", "criterion": "Indicatori", "description": "URL, domini e IP estratti in forma defanged e distinguendo indicatori certi da contesto.", "weight": 20 },
+    { "id": "safety", "criterion": "Gestione sicura", "description": "Nessuna interazione con link o allegati; procedure di analisi sicura citate.", "weight": 15 },
+    { "id": "report", "criterion": "Verdetto e rapporto", "description": "Verdetto motivato, livello di confidenza, azioni e limiti.", "weight": 20 }
+  ],
+  "answer_key": {
+    "q1": { "type": "multi", "correct": ["spf", "dkim", "dmarc"], "points": 3, "explanation": "SPF softfail, DKIM fail (firma di un dominio terzo) e DMARC fail sul dominio dichiarato nel From. Non c'è alcun risultato TLS nell'header." },
+    "q2": { "type": "single", "correct": "b", "points": 2, "explanation": "Gli header aggiunti dai propri server sono gli unici affidabili; From, nome visualizzato e Message-ID sono controllati dal mittente." },
+    "q3": { "type": "single", "correct": "b", "points": 2, "explanation": "Il testo visibile di un link non coincide necessariamente con l'href: la destinazione è spedirapido.tracking-update.example (dominio registrabile: tracking-update.example)." },
+    "q4": { "type": "single", "correct": "b", "points": 2, "explanation": "La doppia estensione .pdf.html è una tecnica comune per far aprire pagine HTML di phishing in locale." },
+    "q5": { "type": "keywords", "keywords": [["phishing", "malevol", "fraudolent"], ["spf", "dkim", "dmarc", "autenticazion"], ["reply-to", "return-path", "mittente"], ["link", "url", "dominio"], ["urgen", "24 ore", "pagamento"]], "points": 3, "explanation": "Un buon verdetto combina evidenze di autenticazione, incoerenze degli header, link ingannevole, leva dell'urgenza e richiesta di pagamento." }
+  },
+  "solution": {
+    "summary": "Phishing (confidenza alta). Il messaggio impersona il corriere SpediRapido: autenticazione fallita (SPF softfail, DKIM fail, DMARC fail), Reply-To e Return-Path su domini diversi dal mittente, link ingannevole verso tracking-update.example, urgenza (24 ore), micro-pagamento e allegato HTML con doppia estensione.",
+    "indicators": [
+      "IP: 198.51.100.77",
+      "Dominio: spedirapido.tracking-update.example (registrabile: tracking-update.example)",
+      "URL: hxxp://spedirapido.tracking-update[.]example/pay?id=7781",
+      "Dominio Reply-To: spedirapido-supporto.example",
+      "Dominio Return-Path: bulkmail-sender.example",
+      "Allegato: Ricevuta_Spedizione.pdf.html"
+    ],
+    "recommendations": [
+      "Bloccare domini e URL su gateway email e proxy.",
+      "Cercare messaggi analoghi nelle caselle aziendali e rimuoverli.",
+      "Avvisare il personale con una comunicazione di sensibilizzazione.",
+      "Verificare se qualche utente ha cliccato o inserito dati di pagamento."
+    ],
+    "common_mistakes": [
+      "Fidarsi del nome visualizzato del mittente.",
+      "Leggere solo il testo del link e non la destinazione reale.",
+      "Aprire l'allegato per curiosità."
+    ]
+  }
+}

@@ -1,0 +1,154 @@
+{
+  "slug": "suspicious-domain-investigation",
+  "sort_order": 2,
+  "title": "Suspicious Domain Investigation — velora-componenti-supporto.example",
+  "description": "Lettura di record DNS, dati RDAP e Certificate Transparency forniti per valutare un possibile dominio di impersonificazione.",
+  "difficulty": "beginner",
+  "category": "domain_investigation",
+  "estimated_minutes": 45,
+  "skills": ["DNS", "RDAP", "SPF/DMARC", "Certificate Transparency", "Valutazione del rischio motivata"],
+  "content": {
+    "scenario": "Il team di sicurezza di Velora Componenti (fittizia) ha ricevuto da un cliente la segnalazione di email provenienti da velora-componenti-supporto.example. Il dominio legittimo è velora-componenti.example. Tutti i dati sono simulati e usano domini e indirizzi riservati alla documentazione.",
+    "briefing": {
+      "from": "SOC Manager (fittizio)",
+      "text": "Valuta se il dominio è legato a un tentativo di impersonificazione. Non visitare il sito e non interagire con l'infrastruttura: usa solo i dati passivi già raccolti qui sotto."
+    },
+    "objective": "Interpretare i dati tecnici del dominio, identificare le anomalie e produrre una valutazione del rischio motivata.",
+    "documents": [
+      {
+        "id": "doc-dns",
+        "title": "Record DNS (raccolti passivamente, simulati)",
+        "kind": "dns",
+        "source": "Resolver DNS (simulato)",
+        "body": "velora-componenti-supporto.example.  A     203.0.113.66\nvelora-componenti-supporto.example.  NS    ns1.hostveloce.example.\nvelora-componenti-supporto.example.  NS    ns2.hostveloce.example.\nvelora-componenti-supporto.example.  MX    10 mail.hostveloce.example.\nvelora-componenti-supporto.example.  TXT   \"v=spf1 +all\"\n_dmarc.velora-componenti-supporto.example.  (nessun record)"
+      },
+      {
+        "id": "doc-legit-dns",
+        "title": "Record DNS del dominio legittimo (riferimento)",
+        "kind": "dns",
+        "source": "Resolver DNS (simulato)",
+        "body": "velora-componenti.example.  A     198.51.100.10\nvelora-componenti.example.  MX    10 mx1.velora-componenti.example.\nvelora-componenti.example.  TXT   \"v=spf1 ip4:198.51.100.0/28 -all\"\n_dmarc.velora-componenti.example.  TXT \"v=DMARC1; p=reject; rua=mailto:dmarc@velora-componenti.example\""
+      },
+      {
+        "id": "doc-rdap",
+        "title": "Risposta RDAP (simulata)",
+        "kind": "text",
+        "source": "RDAP del registro (simulato)",
+        "body": "Dominio: velora-componenti-supporto.example\nRegistrar: Registrar Economico Ltd (fittizio)\nRegistrazione: 6 giorni fa\nScadenza: tra 1 anno\nRegistrante: REDACTED FOR PRIVACY\nStato: clientTransferProhibited"
+      },
+      {
+        "id": "doc-ct",
+        "title": "Certificate Transparency (simulato)",
+        "kind": "text",
+        "source": "Log CT (simulato)",
+        "body": "Certificato DV emesso 6 giorni fa (stesso giorno della registrazione).\nSAN: velora-componenti-supporto.example, login.velora-componenti-supporto.example, fatture.velora-componenti-supporto.example"
+      }
+    ],
+    "tasks": [
+      "Confronta la configurazione DNS del dominio sospetto con quella del dominio legittimo.",
+      "Interpreta i record SPF e DMARC.",
+      "Interpreta i dati RDAP e CT (date, registrante, sottodomini).",
+      "Elenca le anomalie individuate.",
+      "Assegna un livello di rischio motivato e proponi azioni."
+    ],
+    "tools": ["Domain Analysis", "OSINT Workspace", "Report Generator"],
+    "instructions": [
+      "Non visitare il dominio e non effettuare scansioni: i dati passivi sono sufficienti.",
+      "L'oscuramento dei dati del registrante è comune (GDPR) e da solo non è indice di malevolenza.",
+      "Motiva il livello di rischio con elementi concreti; il punteggio non sostituisce il giudizio professionale."
+    ],
+    "deliverable": {
+      "title": "Domain Investigation Note",
+      "sections": ["Dominio analizzato", "Dati raccolti", "Anomalie", "Valutazione del rischio", "Azioni raccomandate", "Limitazioni"]
+    },
+    "questions": [
+      {
+        "id": "q1",
+        "type": "single",
+        "prompt": "Cosa significa il record SPF \"v=spf1 +all\"?",
+        "options": [
+          { "value": "a", "label": "Solo i server elencati possono inviare posta" },
+          { "value": "b", "label": "Qualsiasi server è autorizzato a inviare posta per il dominio" },
+          { "value": "c", "label": "Il dominio non invia posta" },
+          { "value": "d", "label": "La posta non autenticata viene rifiutata" }
+        ]
+      },
+      {
+        "id": "q2",
+        "type": "multi",
+        "prompt": "Quali elementi costituiscono anomalie rilevanti? (seleziona tutte quelle corrette)",
+        "options": [
+          { "value": "a", "label": "Dominio registrato da pochi giorni" },
+          { "value": "b", "label": "SPF permissivo (+all)" },
+          { "value": "c", "label": "Assenza di record DMARC" },
+          { "value": "d", "label": "Sottodomini \"login\" e \"fatture\" nel certificato" },
+          { "value": "e", "label": "Il dominio ha una data di scadenza" },
+          { "value": "f", "label": "Nome che combina il brand con il termine \"supporto\"" }
+        ]
+      },
+      {
+        "id": "q3",
+        "type": "single",
+        "prompt": "Il registrante è \"REDACTED FOR PRIVACY\". Come lo interpreti?",
+        "options": [
+          { "value": "a", "label": "Prova certa di attività malevola" },
+          { "value": "b", "label": "Elemento neutro, comune per effetto del GDPR: non è indicativo da solo" },
+          { "value": "c", "label": "Indica che il dominio è legittimo" },
+          { "value": "d", "label": "Indica che il dominio è scaduto" }
+        ]
+      },
+      {
+        "id": "q4",
+        "type": "single",
+        "prompt": "Quale passo successivo è appropriato?",
+        "options": [
+          { "value": "a", "label": "Visitare il sito dal proprio PC aziendale per vedere il contenuto" },
+          { "value": "b", "label": "Effettuare una scansione delle porte del server" },
+          { "value": "c", "label": "Documentare gli indicatori, bloccarli sui sistemi di posta/proxy e valutare una segnalazione di abuso al registrar" },
+          { "value": "d", "label": "Contattare il registrante via email" }
+        ]
+      },
+      {
+        "id": "q5",
+        "type": "keywords",
+        "prompt": "Motiva in poche righe il livello di rischio che assegni.",
+        "placeholder": "Cita gli elementi tecnici che supportano la tua valutazione..."
+      }
+    ]
+  },
+  "grading_rubric": [
+    { "id": "dns", "criterion": "Lettura dei record DNS", "description": "Record A, NS, MX, TXT interpretati correttamente e confrontati con il dominio legittimo.", "weight": 25 },
+    { "id": "auth", "criterion": "SPF / DMARC", "description": "Spiega il significato di +all e l'assenza di DMARC.", "weight": 20 },
+    { "id": "context", "criterion": "RDAP e CT", "description": "Usa date di registrazione/emissione e sottodomini come indicatori; non sovrastima l'oscuramento del registrante.", "weight": 20 },
+    { "id": "risk", "criterion": "Valutazione motivata", "description": "Il livello di rischio è sostenuto da elementi concreti e accompagnato dai limiti dell'analisi.", "weight": 25 },
+    { "id": "ethics", "criterion": "Metodo non intrusivo", "description": "Nessuna interazione attiva con l'infrastruttura sospetta.", "weight": 10 }
+  ],
+  "answer_key": {
+    "q1": { "type": "single", "correct": "b", "points": 2, "explanation": "Il qualificatore \"+\" su \"all\" autorizza qualsiasi host: l'SPF non offre alcuna protezione ed è tipico di domini creati per inviare posta fraudolenta." },
+    "q2": { "type": "multi", "correct": ["a", "b", "c", "d", "f"], "points": 3, "explanation": "Avere una scadenza è normale per ogni dominio (opzione e errata)." },
+    "q3": { "type": "single", "correct": "b", "points": 1, "explanation": "La redazione dei dati è standard dopo il GDPR: non è un indicatore di malevolenza se isolata." },
+    "q4": { "type": "single", "correct": "c", "points": 2, "explanation": "Visite dirette e scansioni sono interazioni attive con infrastruttura potenzialmente ostile e possono essere non autorizzate. Documentazione, blocco e segnalazione sono azioni difensive appropriate." },
+    "q5": { "type": "keywords", "keywords": [["registr", "recente", "giorni"], ["spf", "+all"], ["dmarc"], ["brand", "sosia", "typosquat", "impersonific", "somiglian"]], "points": 2, "explanation": "Una motivazione solida combina età del dominio, configurazione email permissiva, assenza di DMARC e somiglianza con il brand." }
+  },
+  "solution": {
+    "summary": "Rischio alto: dominio registrato 6 giorni fa che imita il brand, con SPF +all, senza DMARC e con certificato per sottodomini \"login\" e \"fatture\": profilo coerente con un'infrastruttura predisposta per phishing o frodi sui pagamenti.",
+    "key_findings": [
+      "Età del dominio: 6 giorni; certificato emesso lo stesso giorno.",
+      "SPF +all: chiunque può inviare email a nome del dominio.",
+      "DMARC assente, a differenza del dominio legittimo (p=reject).",
+      "Sottodomini login./fatture. suggeriscono pagine di raccolta credenziali o pagamenti.",
+      "Registrante oscurato: elemento neutro."
+    ],
+    "recommendations": [
+      "Bloccare dominio e sottodomini su gateway email e proxy web.",
+      "Avvisare clienti e fornitori del tentativo di impersonificazione.",
+      "Valutare segnalazione di abuso al registrar e all'hosting provider.",
+      "Monitorare nuovi certificati che contengono il nome del brand."
+    ],
+    "common_mistakes": [
+      "Visitare il dominio per \"vedere com'è\".",
+      "Considerare il registrante oscurato come prova di malevolenza.",
+      "Assegnare il rischio senza motivazione."
+    ]
+  }
+}
